@@ -12,10 +12,10 @@ Route::prefix('admins')->group(function () {
     Route::delete('/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
 });
 
-// Route::prefix('polis')->group(function () {
-//     Route::get('/', [PoliController::class, 'index'])->name('polis.index');
-//     Route::get('/{id}', [PoliController::class, 'show'])->name('polis.show');
-//     Route::post('/', [PoliController::class, 'store'])->name('polis.store');
-//     Route::put('/{id}', [PoliController::class, 'update'])->name('polis.update');
-//     Route::delete('/{id}', [PoliController::class, 'destroy'])->name('polis.destroy');
-// });
+Route::prefix('polis')->group(function () {
+    Route::get('/', [PoliController::class, 'index'])->name('polis.index');
+    Route::get('/{id}', [PoliController::class, 'show'])->name('polis.show');
+    Route::post('/', [PoliController::class, 'store'])->name('polis.store');
+    Route::put('/{id}', [PoliController::class, 'update'])->name('polis.update');
+    Route::delete('/{id}', [PoliController::class, 'destroy'])->name('polis.destroy');
+});
