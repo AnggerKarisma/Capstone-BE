@@ -14,24 +14,46 @@ class reservation extends Model
     protected $primaryKey = 'reservid';
 
     protected $fillable = [
-        'user_id',
+        'booked_user_id',
+        'verif_adminID',
         'nama',
         'email',
         'tempat_lahir',
         'tanggal_lahir',
         'nomor_whatsapp',
-        'penjaminan',
         'nomor_ktp',
+        'penjaminan',
         'keluhan',
+        'status',
+        'poli_id',
+        'jadwal_dokter_id',
+        'nomor_antrian',
+        'tanggal_reservasi',
     ];
     
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'tanggal_reservasi' => 'date',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'userid');
+        return $this->belongsTo(User::class, 'booked_user_id', 'userid');
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class, 'verif_adminID', 'adminID');
+    }
+
+    public function poli()
+    {
+        return $this->belongsTo(Poli::class, 'poli_id', 'poliid');
+    }
+
+    public function jadwalDokter()
+    {
+        return $this->belongsTo(JadwalDokter::class, 'jadwal_dokter_id', 'jadwaldokterid');
     }
 
     public function getCreatedAtAttribute($value)
