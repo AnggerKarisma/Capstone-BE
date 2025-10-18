@@ -24,15 +24,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     // Route::apiResource('polis', PoliController::class);
 });
 
-<<<<<<< Updated upstream
-// Route::prefix('polis')->group(function () {
-//     Route::get('/', [PoliController::class, 'index'])->name('polis.index');
-//     Route::get('/{id}', [PoliController::class, 'show'])->name('polis.show');
-//     Route::post('/', [PoliController::class, 'store'])->name('polis.store');
-//     Route::put('/{id}', [PoliController::class, 'update'])->name('polis.update');
-//     Route::delete('/{id}', [PoliController::class, 'destroy'])->name('polis.destroy');
-// });
-=======
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Route::get('/reservasi', [ReservasiController::class, 'index']);
@@ -48,4 +39,3 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::get('/polis', [PoliController::class, 'index']);
     Route::get('/polis/{id}', [PoliController::class, 'show']);
 });
->>>>>>> Stashed changes
