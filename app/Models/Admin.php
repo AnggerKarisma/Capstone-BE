@@ -33,9 +33,4 @@ class Admin extends Authenticatable
     {
         return $this->hasMany(Poli::class, 'adminID');
     }
-
-    // public function reservasis()
-    // {
-    //     return $this->hasMany(Reservasi::class, 'adminID');
-    // }
 }
