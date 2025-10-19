@@ -10,16 +10,17 @@ class Poli extends Model
     use HasFactory;
 
     protected $primaryKey = 'poliID';
+    protected $table = 'polis';
 
     protected $fillable = [
         'nama',
         'tipeLayanan',
         'tipePoli',
-        'adminID'
+        'superAdminID'
     ];
 
     public function superAdmin()
     {
-        return $this->belongsTo(SuperAdmin::class, 'superAdminID', 'superAdminID');
+        return $this->belongsTo(Admin::class, 'superAdminID', 'adminID');
     }
 }
