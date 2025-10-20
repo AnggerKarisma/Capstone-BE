@@ -48,7 +48,7 @@ class reservation extends Model
 
     public function poli()
     {
-        return $this->belongsTo(Poli::class, 'poli_id', 'poliid');
+        return $this->belongsTo(Poli::class, 'poli_id', 'poliID');
     }
 
     public function jadwalDokter()
