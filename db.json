@@ -1,0 +1,87 @@
+{
+  "superadmins": [
+    { "superID": 1, "nama": "Super Admin", "email": "superadmin@rs.com", "password": "super123" }
+  ],
+
+  "admins": [
+    { "adminID": 1, "nama": "Admin Utama", "email": "admin@rs.com", "password": "admin123" },
+    { "adminID": 2, "nama": "Admin Poli Umum", "email": "adminpoli@rs.com", "password": "poli123" }
+  ],
+
+  "users": [
+    { "userID": 1, "nama": "Dila Wahyu", "email": "dila@example.com", "password": "123456", "nomor_telpon": "08123456789" },
+    { "userID": 2, "nama": "Rafi Pratama", "email": "rafi@example.com", "password": "abcdef", "nomor_telpon": "08234567890" }
+  ],
+
+  "profile": [
+    { 
+      "profileID": 1, 
+      "userID": 1, 
+      "lokasi": "Balikpapan Selatan", 
+      "jenis_kelamin": "Perempuan",
+      "noKTP": "6472011234560001",
+      "tempatLahir": "Balikpapan",
+      "tanggalLahir": "2002-04-12",
+      "agama": "Islam",
+      "alamat": "Jl. Syarifuddin Yoes No.12",
+      "provinsi": "Kalimantan Timur",
+      "kabupaten_kota": "Balikpapan"
+    },
+    { 
+      "profileID": 2, 
+      "userID": 2, 
+      "lokasi": "Balikpapan Barat", 
+      "jenis_kelamin": "Laki-laki",
+      "noKTP": "6472011234560002",
+      "tempatLahir": "Samarinda",
+      "tanggalLahir": "2001-08-19",
+      "agama": "Islam",
+      "alamat": "Jl. MT Haryono No.89",
+      "provinsi": "Kalimantan Timur",
+      "kabupaten_kota": "Balikpapan"
+    }
+  ],
+
+  "poli": [
+    { "poliID": 1, "nama": "Poli Umum", "tipeLayanan": "Rawat Jalan", "tipePoli": "Umum" },
+    { "poliID": 2, "nama": "Poli Gigi", "tipeLayanan": "Rawat Jalan", "tipePoli": "Spesialis" },
+    { "poliID": 3, "nama": "Poli Penyakit Dalam", "tipeLayanan": "Rawat Inap", "tipePoli": "Spesialis" }
+  ],
+
+  "dokter": [
+    { "dokterID": 1, "nama": "dr. Rina Oktaviani", "spesialis": "Umum", "aktif": true, "jenisKelamin": "Perempuan", "SIP": "SIP-12345", "SIPdate": "2025-12-31" },
+    { "dokterID": 2, "nama": "drg. Aldi Nugraha", "spesialis": "Gigi", "aktif": true, "jenisKelamin": "Laki-laki", "SIP": "SIP-54321", "SIPdate": "2025-12-31" },
+    { "dokterID": 3, "nama": "dr. Budi Santoso", "spesialis": "Penyakit Dalam", "aktif": false, "jenisKelamin": "Laki-laki", "SIP": "SIP-98765", "SIPdate": "2026-01-15" }
+  ],
+
+  "jadwal_dokter": [
+    { "JD_ID": 1, "dokterID": 1, "poliID": 1, "dokterDate": "2025-10-15", "startSession": "08:00", "endSession": "12:00", "kuota": 10 },
+    { "JD_ID": 2, "dokterID": 2, "poliID": 2, "dokterDate": "2025-10-16", "startSession": "09:00", "endSession": "13:00", "kuota": 8 },
+    { "JD_ID": 3, "dokterID": 3, "poliID": 3, "dokterDate": "2025-10-17", "startSession": "10:00", "endSession": "14:00", "kuota": 6 }
+  ],
+
+  "reservasi": [
+    { "reservID": 1, "userID": 1, "poliID": 1, "penjaminan": "BPJS", "noKTP": "6472011234560001", "keluhan": "Demam tinggi", "status": "Menunggu" },
+    { "reservID": 2, "userID": 2, "poliID": 2, "penjaminan": "Mandiri", "noKTP": "6472011234560002", "keluhan": "Sakit gigi berlubang", "status": "Selesai" }
+  ],
+
+  "kelola_reservasi": [
+    { "KRID": 1, "reservID": 1, "nama": "Admin Utama", "email": "admin@rs.com", "verifikasi": "Diterima" },
+    { "KRID": 2, "reservID": 2, "nama": "Admin Poli Umum", "email": "adminpoli@rs.com", "verifikasi": "Diterima" }
+  ],
+
+  "rekam_medis": [
+    { "RM_ID": 1, "nama": "Dila Wahyu", "email": "dila@example.com", "TTL": "2002-04-12", "jenisKelamin": "Perempuan", "noKTP": "6472011234560001", "penjaminan": "BPJS", "gejala": "Demam, batuk", "diagnosis": "Flu dan demam" },
+    { "RM_ID": 2, "nama": "Rafi Pratama", "email": "rafi@example.com", "TTL": "2001-08-19", "jenisKelamin": "Laki-laki", "noKTP": "6472011234560002", "penjaminan": "Mandiri", "gejala": "Sakit gigi", "diagnosis": "Infeksi gigi" }
+  ],
+
+  "penanggung": [
+    { "pjlID": 1, "userID": 1, "nama": "Ahmad Wahyu", "hubPJ": "Ayah", "alamatPJ": "Balikpapan Selatan", "noPJ": "08125678901" },
+    { "pjlID": 2, "userID": 2, "nama": "Sri Pratami", "hubPJ": "Ibu", "alamatPJ": "Balikpapan Barat", "noPJ": "08126789123" }
+  ],
+
+  "chat": [
+    { "chatID": 1, "userID": 1, "adminID": 1, "text": "Halo Admin, saya mau ubah jadwal reservasi." },
+    { "chatID": 2, "userID": 2, "adminID": 2, "text": "Apakah poli gigi buka hari Jumat?" }
+  ]
+}
