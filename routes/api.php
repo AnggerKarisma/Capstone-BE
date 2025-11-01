@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\ProfileController;
@@ -21,20 +22,37 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-Route::prefix('admins')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('admins.index');
-    Route::get('/{id}', [AdminController::class, 'show'])->name('admins.show');
-    Route::post('/', [AdminController::class, 'store'])->name('admins.store');
-    Route::put('/{id}', [AdminController::class, 'update'])->name('admins.update');
-    Route::delete('/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
-    Route::get('/reservations', [ReservationController::class, 'index']);
-    Route::patch('/reservations/{reservation}/verify', [ReservationController::class, 'verify']);
+//auth
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+//Akses khusus superadmin
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
+    
+    // CRUD Admin
+    Route::get('/admins', [AdminController::class, 'index']);      
+    Route::post('/admins', [AdminController::class, 'store']);    
+    Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
+    
+    Route::post('/polis', [PoliController::class, 'store']);
+    Route::put('/polis/{id}', [PoliController::class, 'update']);
+    Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
+    // CRUD Poli
+    // Route::apiResource('polis', PoliController::class);
 });
 
-Route::prefix('polis')->group(function () {
-    Route::get('/', [PoliController::class, 'index'])->name('polis.index');
-    Route::get('/{id}', [PoliController::class, 'show'])->name('polis.show');
-    Route::post('/', [PoliController::class, 'store'])->name('polis.store');
-    Route::put('/{id}', [PoliController::class, 'update'])->name('polis.update');
-    Route::delete('/{id}', [PoliController::class, 'destroy'])->name('polis.destroy');
+//Akses khusus admin 
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Route::get('/reservasi', [ReservasiController::class, 'index']);
+});
+
+//Akses admin dan superadmin
+Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
+
+    Route::get('/admins/{id}', [AdminController::class, 'show']); 
+    Route::put('/admins/{id}', [AdminController::class, 'update']); 
+
+    // CRUD Poli yang bisa diakses semua
+    Route::get('/polis', [PoliController::class, 'index']);
+    Route::get('/polis/{id}', [PoliController::class, 'show']);
 });

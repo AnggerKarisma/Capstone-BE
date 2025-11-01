@@ -16,12 +16,13 @@ return new class extends Migration
             $table->string('Nama');
             $table->string('Email')->unique();
             $table->string('Password');
+            $table->enum('role', ['superadmin', 'admin'])->default('admin');
             $table->timestamps(); 
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('admin');
+        Schema::dropIfExists('admins');
     }
 };

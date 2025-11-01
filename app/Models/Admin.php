@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-// use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Admin extends Model
+class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory;
 
     protected $table = 'admins';
     protected $primaryKey = 'adminID';
@@ -18,19 +17,20 @@ class Admin extends Model
         'Nama',
         'Email',
         'Password',
+        'role'
     ];
 
     protected $hidden = [
         'Password',
     ];
 
+    public function getAuthPassword()
+    {
+        return $this->Password;
+    }
+
     public function polis()
     {
         return $this->hasMany(Poli::class, 'adminID');
-    }
-
-    public function reservasis()
-    {
-        return $this->hasMany(Reservasi::class, 'adminID');
     }
 }
