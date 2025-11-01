@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
+use App\Http\Controllers\DokterController;
 
 //auth
 Route::post('/login', [AuthController::class, 'login']);
@@ -19,6 +20,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::post('/polis', [PoliController::class, 'store']);
     Route::put('/polis/{id}', [PoliController::class, 'update']);
     Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
+
+    Route::apiResource('dokters', DokterController::class);
 });
 
 //Akses khusus admin 
