@@ -30,10 +30,16 @@ class PoliController extends Controller
             'nama' => 'required|string|max:100',
             'tipeLayanan' => 'required|string|max:100',
             'tipePoli' => 'required|string|max:100',
-            'superAdminID' => 'nullable|exists:super_admins,superAdminID',
         ]);
 
-        $poli = Poli::create($request->all());
+        // Ambil superAdminID dari user yang sedang login
+        $poli = Poli::create([
+            'nama' => $request->nama,
+            'tipeLayanan' => $request->tipeLayanan,
+            'tipePoli' => $request->tipePoli,
+            'superAdminID' => $request->user()->adminID, // ← Ambil dari user yang login
+        ]);
+
         return response()->json($poli, 201);
     }
 
