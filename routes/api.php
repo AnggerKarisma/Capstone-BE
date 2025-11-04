@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\DokterController;
+use App\Http\Controllers\JadwalDokterController;
 
 //auth
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,7 +23,16 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
 
     Route::apiResource('dokters', DokterController::class);
+
+    Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
+    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
+    Route::get('/jadwal-dokter/{dokterId}/{poliID}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokterId}/{poliID}', [JadwalDokterController::class, 'update']);
+    Route::delete('/jadwal-dokter/{dokterId}/{poliID}', [JadwalDokterController::class, 'destroy']);
+    
 });
+
+Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -37,4 +47,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
 
     Route::get('/polis', [PoliController::class, 'index']);
     Route::get('/polis/{id}', [PoliController::class, 'show']);
+
+    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
+    Route::get('/jadwal-dokter/{dokterId}/{poliID}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokterId}/{poliID}', [JadwalDokterController::class, 'update']);
 });
