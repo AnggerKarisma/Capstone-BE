@@ -3,12 +3,18 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserAuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
+
+Route::post('/register', [UserAuthController::class, 'register']);
+Route::post('/login-user', [UserAuthController::class, 'login']);
+Route::post('/logout-user', [UserAuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -22,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
-    Route::post('/penanggung-jawabs', [PenanggungJawabController::class, 'store']);
+    Route::post('/penanggung-jawab', [PenanggungJawabController::class, 'store']);
 
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/chat/contacts', [ChatController::class, 'getContacts']);
