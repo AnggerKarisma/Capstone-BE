@@ -33,4 +33,8 @@ class Admin extends Authenticatable
     {
         return $this->hasMany(Poli::class, 'adminID');
     }
+    public function chats()
+    {
+        return $this->morphMany(Chat::class, 'senderable');
+    }
 }

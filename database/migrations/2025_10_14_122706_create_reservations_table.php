@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id('reservid');
             $table->foreignId('booked_user_id')->constrained(table:'users',column:'userid')->onDelete('cascade');
             $table->foreignId('verif_adminID')->nullable()->constrained(table:'admins',column:'adminID')->onDelete('set null');
+            $table->foreignId('penanggung_jawab_id')->nullable()->constrained(table:'penanggung_jawabs',column:'PjId')->onDelete('set null');
             $table->string('nama');
             $table->string('email');
             $table->string('tempat_lahir');

@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('penanggung_jawabs', function (Blueprint $table) {
-            $table->id();
+            $table->id('PjId');
+            $table->string('nama');
+            $table->string('nomor_whatsapp');
             $table->timestamps();
         });
     }

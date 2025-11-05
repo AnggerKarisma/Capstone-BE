@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chats', function (Blueprint $table) {
-            $table->id();
+            $table->id('chatId');
+            $table->morphs('senderable');
+            $table->morphs('receiverable');
+            $table->text('message');
             $table->timestamps();
         });
     }

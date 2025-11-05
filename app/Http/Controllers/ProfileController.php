@@ -32,7 +32,7 @@ class ProfileController extends Controller
         $validatedData = $request->validate([
             'lokasi' => 'nullable|string|max:255',
             'jenis_kelamin' => ['nullable', Rule::in(['laki-laki', 'Perempuan'])],
-            'noKTP' => ['nullable', 'string', 'digits:16', Rule::unique('profiles')->ignore($user->id ?? null)],
+            'noKTP' => ['nullable', 'string', 'digits:16', Rule::unique('profiles')->ignore($user->profile->id ?? null, 'id')],
             'suku' => 'nullable|string|max:100',
             'tempat_lahir' => 'nullable|string|max:100',
             'tanggal_lahir' => 'nullable|date',
@@ -52,13 +52,13 @@ class ProfileController extends Controller
         ]);
 
         $profile = $user->profile()->updateOrCreate(
-            ['user_id' => $user->id],
-            $validated
+            ['user_id' => $user->userid],
+            $validatedData
         );
 
         return response()->json([
             'message' => 'Profile berhasil dibuat',
             'data' => $profile
-        ], 201);
+        ], 200);
     }
 }

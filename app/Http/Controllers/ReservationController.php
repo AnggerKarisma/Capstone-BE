@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\Poli;
+use App\PenanggungJawab;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class ReservationController extends Controller
 {
     public function index()
     {
-        $query = Reservation::with(['user', 'poli', 'jadwalDokter']);
+        $query = Reservation::with(['user', 'poli', 'jadwalDokter', 'penanggungJawab']);
 
         if ($request->has('status')&& in_array($request->status, ['pending', 'confirmed', 'cancelled'])) {
             $query->where('status', $request->status);
@@ -40,6 +41,7 @@ class ReservationController extends Controller
             'keluhan' => 'required|string|max:1000',
             'poli_id' => 'required|exists:polis,poliID',
             'tanggal_reservasi' => 'required|date|after_or_equal:today',
+            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,PjId',
         ]);
 
         if ($validator->fails()) {
@@ -64,7 +66,7 @@ class ReservationController extends Controller
     public function show(Reservation $reservation)
     {
         $this->authorize('view', $reservation);
-        $reservation->load(['user', 'admin', 'poli', 'jadwalDokter']);
+        $reservation->load(['user', 'admin', 'poli', 'jadwalDokter', 'penanggungJawab']);
 
         return response()->json([
             'success' => true,
@@ -106,14 +108,14 @@ class ReservationController extends Controller
     $nomorAntrian = $jumlahAntrianSebelumnya + 1;
 
     $poli = Poli::findOrFail($poliId);
-    $kodePoli = $poli->kode ?? 'P';
-    $nomorAntrian = $kodePoli . '-' . str_replace('-','', $tanggal) . '-' . str_pad($nomorAntrianBaru, 3, '0', STR_PAD_LEFT);
+    $kodePoli = 'P'. $poli->poliID;
+    $nomorAntrianLengkap = $kodePoli . '-' . str_replace('-','', $tanggal) . '-' . str_pad($nomorAntrianBaru, 3, '0', STR_PAD_LEFT);
 
         $reservation->verif_adminID = Auth::id();
         $reservation->poli_id = $poliId;
         $reservation->jadwal_dokter_id = $request->jadwal_dokter_id;
         $reservation->tanggal_reservasi = $tanggal;
-        $reservation->nomor_antrian = $nomorAntrian;
+        $reservation->nomor_antrian = $nomorAntrianLengkap;
         $reservation->status = 'confirmed';
         $reservation->save();
 

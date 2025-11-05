@@ -6,6 +6,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DokterController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\PenanggungJawabController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -19,7 +22,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
+    Route::post('/penanggung-jawabs', [PenanggungJawabController::class, 'store']);
 
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/chat/contacts', [ChatController::class, 'getContacts']);
+    Route::get('/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
 });
 
 //auth
@@ -36,11 +43,13 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::post('/polis', [PoliController::class, 'store']);
     Route::put('/polis/{id}', [PoliController::class, 'update']);
     Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
+
+    Route::apiResource('dokters', DokterController::class);
 });
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    // Route::get('/reservasi', [ReservasiController::class, 'index']);
+    Route::get('/reservasi', [ReservasiController::class, 'index']);
 });
 
 //Akses admin dan superadmin
@@ -48,7 +57,16 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
 
     Route::get('/admins/{id}', [AdminController::class, 'show']); 
     Route::put('/admins/{id}', [AdminController::class, 'update']); 
-
     Route::get('/polis', [PoliController::class, 'index']);
     Route::get('/polis/{id}', [PoliController::class, 'show']);
+    Route::get('/penanggung-jawabs', [PenanggungJawabController::class, 'index']);
+    Route::get('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'show']);
+    Route::put('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'update']);
+    Route::delete('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'destroy']);
+    Route::get('/reservasi/{reservation}', [ReservationController::class, 'show']);
+    Route::post('/reservasi/{reservation}/verify', [ReservationController::class, 'verify']);
+    Route::post('/reservasi/{reservation}/cancel', [ReservationController::class, 'cancel']);
+    Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/admin/chat/contacts', [ChatController::class, 'getContacts']);
+    Route::get('/admin/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
 });

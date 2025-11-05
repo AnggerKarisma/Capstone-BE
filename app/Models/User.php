@@ -39,4 +39,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class, 'user_id', 'userid');
     }
+    public function chats()
+    {
+        return $this->morphMany(Chat::class, 'senderable');
+    }
 }

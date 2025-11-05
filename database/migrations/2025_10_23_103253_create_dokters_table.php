@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('polis', function (Blueprint $table) {
-            $table->id('poliID');
+        Schema::create('dokters', function (Blueprint $table) {
+            $table->id('dokterId');
             $table->string('nama');
-            $table->string('tipeLayanan');
-            $table->string('tipePoli');
-
-            // Foreign key ke tabel admin
-            $table->unsignedBigInteger('superAdminID')->nullable();
-            $table->foreign('superAdminID')->references('adminID')->on('admins')->onDelete('set null');
-
+            $table->string('spesialis');
+            $table->boolean('aktif')->default(true);
+            $table->enum('jenisKelamin', ['Laki-laki', 'Perempuan']);
+            $table->string('SIP')->unique();
+            $table->date('SIPdate');
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('polis');
+        Schema::dropIfExists('dokters');
     }
 };

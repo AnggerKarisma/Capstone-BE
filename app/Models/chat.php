@@ -6,5 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class chat extends Model
 {
-    //
+    use HasFactory;
+    protected $table = 'chats';
+    protected $primaryKey = 'chatId';
+    protected $fillable = [
+        'senderable_id',
+        'senderable_type',
+        'receiverable_id',
+        'receiverable_type',
+        'message',
+    ];
+
+    public function senderable()
+    {
+        return $this->morphTo();
+    }
+
+    public function receiverable()
+    {
+        return $this->morphTo();
+    }
 }

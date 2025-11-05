@@ -16,6 +16,7 @@ class reservation extends Model
     protected $fillable = [
         'booked_user_id',
         'verif_adminID',
+        'penanggung_jawab_id',
         'nama',
         'email',
         'tempat_lahir',
@@ -54,6 +55,11 @@ class reservation extends Model
     public function jadwalDokter()
     {
         return $this->belongsTo(JadwalDokter::class, 'jadwal_dokter_id', 'jadwaldokterid');
+    }
+
+    public function penanggungJawab()
+    {
+        return $this->belongsTo(PenanggungJawab::class, 'penanggung_jawab_id', 'PjId');
     }
 
     public function getCreatedAtAttribute($value)
