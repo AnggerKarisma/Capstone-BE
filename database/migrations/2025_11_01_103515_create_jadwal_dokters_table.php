@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('jadwal_dokter', function (Blueprint $table) {
             $table->unsignedBigInteger('dokter_id');
-            $table->unsignedBigInteger('poliID');
+            $table->string('poli_id', 10);
 
             // informasi Pelayanan
             $table->string('gedung', 1)->nullable();
@@ -121,9 +121,9 @@ return new class extends Migration
             $table->string('last_update_by', 500)->nullable();
             $table->char('update_bpjs', 1)->nullable();
 
-            $table->primary(['dokter_id', 'poliID']);
+            $table->primary(['dokter_id', 'poli_id']);
             $table->foreign('dokter_id')->references('dokter_id')->on('dokters')->onDelete('cascade');
-            $table->foreign('poliID')->references('poliID')->on('polis')->onDelete('cascade');
+            $table->foreign('poli_id')->references('poli_id')->on('polis')->onDelete('cascade');
         });
     }
 

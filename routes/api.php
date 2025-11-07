@@ -26,9 +26,9 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
 
     Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
     Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poliID}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id}/{poliID}', [JadwalDokterController::class, 'update']);
-    Route::delete('/jadwal-dokter/{dokter_id}/{poliID}', [JadwalDokterController::class, 'destroy']);
+    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
+    Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
     
 });
 
@@ -49,6 +49,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::get('/polis/{id}', [PoliController::class, 'show']);
 
     Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poliID}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id}/{poliID}', [JadwalDokterController::class, 'update']);
+    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
 });
