@@ -11,7 +11,7 @@ class JadwalDokter extends Model
 
     protected $table = 'jadwal_dokter';
     public $incrementing = false; 
-    protected $primaryKey = ['dokterId', 'poliID'];
+    protected $primaryKey = ['dokter_id', 'poliID'];
     public $timestamps = false; 
 
     /**
@@ -19,7 +19,7 @@ class JadwalDokter extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'dokterId',
+        'dokter_id',
         'poliID',
         'gedung',
         'pelayanan_cash',
@@ -157,7 +157,7 @@ class JadwalDokter extends Model
      */
     public function dokter()
     {
-        return $this->belongsTo(Dokter::class, 'dokterId', 'dokterId');
+        return $this->belongsTo(Dokter::class, 'dokter_id', 'dokter_id');
     }
 
     /**

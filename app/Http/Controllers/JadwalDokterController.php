@@ -30,10 +30,10 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function show($dokterId, $poliID)
+    public function show($dokter_id, $poliID)
     {
         try {
-            $jadwal = JadwalDokter::where('dokterId', $dokterId)
+            $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poliID', $poliID)
                 ->with(['dokter', 'poli'])
                 ->first();
@@ -63,11 +63,11 @@ class JadwalDokterController extends Controller
     {
         try {
             $request->validate([
-                'dokterId' => 'required|exists:dokters,dokterId',
+                'dokter_id' => 'required|exists:dokters,dokter_id',
                 'poliID' => 'required|exists:polis,poliID',
             ]);
 
-            $exists = JadwalDokter::where('dokterId', $request->dokterId)
+            $exists = JadwalDokter::where('dokter_id', $request->dokter_id)
                 ->where('poliID', $request->poliID)
                 ->exists();
 
@@ -85,7 +85,7 @@ class JadwalDokterController extends Controller
 
             $jadwal = JadwalDokter::create($data);
 
-            $jadwal = JadwalDokter::where('dokterId', $request->dokterId)
+            $jadwal = JadwalDokter::where('dokter_id', $request->dokter_id)
                 ->where('poliID', $request->poliID)
                 ->first();
 
@@ -112,10 +112,10 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function update(Request $request, $dokterId, $poliID)
+    public function update(Request $request, $dokter_id, $poliID)
     {
         try {
-            $exists = JadwalDokter::where('dokterId', $dokterId)
+            $exists = JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poliID', $poliID)
                 ->exists();
 
@@ -128,17 +128,17 @@ class JadwalDokterController extends Controller
 
             $data = $request->all();
 
-            $data['dokterId'] = $dokterId;
+            $data['dokter_id'] = $dokter_id;
             $data['poliID'] = $poliID;
 
             $data['last_update'] = now();
             $data['last_update_by'] = Auth::user()->name ?? 'system';
 
-            JadwalDokter::where('dokterId', $dokterId)
+            JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poliID', $poliID)
                 ->update($data);
 
-            $jadwal = JadwalDokter::where('dokterId', $dokterId)
+            $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poliID', $poliID)
                 ->first();
 
@@ -164,9 +164,9 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function destroy($dokterId, $poliID)
+    public function destroy($dokter_id, $poliID)
     {
-        $jadwal = JadwalDokter::where('dokterId', $dokterId)
+        $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
             ->where('poliID', $poliID)
             ->first();
 
