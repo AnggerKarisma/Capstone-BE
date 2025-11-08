@@ -30,11 +30,11 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function show($dokter_id, $poliID)
+    public function show($dokter_id, $poli_id)
     {
         try {
             $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
-                ->where('poliID', $poliID)
+                ->where('poli_id', $poli_id)
                 ->with(['dokter', 'poli'])
                 ->first();
 
@@ -64,11 +64,11 @@ class JadwalDokterController extends Controller
         try {
             $request->validate([
                 'dokter_id' => 'required|exists:dokters,dokter_id',
-                'poliID' => 'required|exists:polis,poliID',
+                'poli_id' => 'required|exists:polis,poli_id',
             ]);
 
             $exists = JadwalDokter::where('dokter_id', $request->dokter_id)
-                ->where('poliID', $request->poliID)
+                ->where('poli_id', $request->poli_id)
                 ->exists();
 
             if ($exists) {
@@ -86,7 +86,7 @@ class JadwalDokterController extends Controller
             $jadwal = JadwalDokter::create($data);
 
             $jadwal = JadwalDokter::where('dokter_id', $request->dokter_id)
-                ->where('poliID', $request->poliID)
+                ->where('poli_id', $request->poli_id)
                 ->first();
 
             return response()->json([
@@ -112,11 +112,11 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function update(Request $request, $dokter_id, $poliID)
+    public function update(Request $request, $dokter_id, $poli_id)
     {
         try {
             $exists = JadwalDokter::where('dokter_id', $dokter_id)
-                ->where('poliID', $poliID)
+                ->where('poli_id', $poli_id)
                 ->exists();
 
             if (!$exists) {
@@ -129,17 +129,17 @@ class JadwalDokterController extends Controller
             $data = $request->all();
 
             $data['dokter_id'] = $dokter_id;
-            $data['poliID'] = $poliID;
+            $data['poli_id'] = $poli_id;
 
             $data['last_update'] = now();
             $data['last_update_by'] = Auth::user()->name ?? 'system';
 
             JadwalDokter::where('dokter_id', $dokter_id)
-                ->where('poliID', $poliID)
+                ->where('poli_id', $poli_id)
                 ->update($data);
 
             $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
-                ->where('poliID', $poliID)
+                ->where('poli_id', $poli_id)
                 ->first();
 
             return response()->json([
@@ -164,10 +164,10 @@ class JadwalDokterController extends Controller
         }
     }
 
-    public function destroy($dokter_id, $poliID)
+    public function destroy($dokter_id, $poli_id)
     {
         $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
-            ->where('poliID', $poliID)
+            ->where('poli_id', $poli_id)
             ->first();
 
         if (!$jadwal) {

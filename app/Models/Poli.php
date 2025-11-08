@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JadwalDokter;
 
 class Poli extends Model
 {
@@ -62,10 +63,5 @@ class Poli extends Model
     public function jadwalDokter()
     {
         return $this->hasMany(JadwalDokter::class, 'poli_id', 'poli_id');
-    }
-
-    public function superAdmin()
-    {
-        return $this->belongsTo(Admin::class, 'superAdminID', 'adminID');
     }
 }

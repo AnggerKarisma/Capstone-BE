@@ -19,8 +19,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
     
     Route::post('/polis', [PoliController::class, 'store']);
-    Route::put('/polis/{id}', [PoliController::class, 'update']);
-    Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
+    Route::put('/polis/{poli_id}', [PoliController::class, 'update']);
+    Route::delete('/polis/{poli_id}', [PoliController::class, 'destroy']);    
 
     Route::apiResource('dokters', DokterController::class);
 
@@ -46,7 +46,7 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::put('/admins/{id}', [AdminController::class, 'update']); 
 
     Route::get('/polis', [PoliController::class, 'index']);
-    Route::get('/polis/{id}', [PoliController::class, 'show']);
+    Route::get('/polis/{poli_id}', [PoliController::class, 'show']);
 
     Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
     Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
