@@ -1,0 +1,8 @@
+Langkah 11: Menjalankan Server
+Untuk menjalankan chat real-time ini, Anda perlu 3 terminal yang berjalan bersamaan:
+
+Server Aplikasi: php artisan serve
+
+Server WebSocket: php artisan reverb:start
+
+Pekerja Antrian: php artisan queue:work

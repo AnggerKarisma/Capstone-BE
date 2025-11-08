@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
+use App\Http\Controllers\JadwalDokterController;
 
 Route::post('/register', [UserAuthController::class, 'register']);
 Route::post('/login-user', [UserAuthController::class, 'login']);
@@ -51,7 +52,16 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::delete('/polis/{id}', [PoliController::class, 'destroy']);    
 
     Route::apiResource('dokters', DokterController::class);
+
+    Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
+    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
+    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
+    Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
+    
 });
+
+Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -75,4 +85,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/admin/chat/contacts', [ChatController::class, 'getContacts']);
     Route::get('/admin/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
+
+    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
+    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
 });

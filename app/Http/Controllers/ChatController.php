@@ -41,9 +41,12 @@ class ChatController extends Controller
             'message' => $request->message,
         ]);
 
+        $chat->load('senderable');
+
+        broadcast(new MessageSent($chat))->toOthers();
+
         return response()->json([
             'success' => true,
-            'message' => 'Pesan terkirim',
             'data' => $chat
         ], 201);
     }
@@ -79,8 +82,6 @@ class ChatController extends Controller
     {
         $user = $request->user();
         
-        // Logika ini bisa kompleks, ini adalah contoh sederhana:
-        // Ambil semua ID unik dan tipe yang pernah berkomunikasi dengan kita
         
         $sentTo = Chat::where('senderable_id', $user->getKey())
                       ->where('senderable_type', get_class($user))

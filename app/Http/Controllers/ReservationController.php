@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\Poli;
-use App\PenanggungJawab;
+use App\Models\PenanggungJawab;
+use App\Models\Antrian;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -13,9 +14,9 @@ use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $query = Reservation::with(['user', 'poli', 'jadwalDokter', 'penanggungJawab']);
+        $query = Reservation::with(['user', 'poli', 'dokter', 'penanggungJawab']);
 
         if ($request->has('status')&& in_array($request->status, ['pending', 'confirmed', 'cancelled'])) {
             $query->where('status', $request->status);
@@ -39,7 +40,7 @@ class ReservationController extends Controller
             'penjaminan' => 'required|in:asuransi,cash',
             'nomor_ktp' => 'required|string|size:16',
             'keluhan' => 'required|string|max:1000',
-            'poli_id' => 'required|exists:polis,poliID',
+            'poli_id' => 'required|exists:polis,poli_id',
             'tanggal_reservasi' => 'required|date|after_or_equal:today',
             'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,PjId',
         ]);
@@ -66,7 +67,7 @@ class ReservationController extends Controller
     public function show(Reservation $reservation)
     {
         $this->authorize('view', $reservation);
-        $reservation->load(['user', 'admin', 'poli', 'jadwalDokter', 'penanggungJawab']);
+        $reservation->load(['user', 'admin', 'poli', 'dokter', 'penanggungJawab']);
 
         return response()->json([
             'success' => true,
@@ -85,10 +86,9 @@ class ReservationController extends Controller
             ], 409);
         }
         $validator = Validator::make($request->all(), [
-            'poli_id' => 'required|exists:polis,poliID',
-            'jadwal_dokter_id' => 'required|exists:jadwal_dokters,jadwaldokterid',
+            'poli_id' => 'required|exists:polis,poli_id',
+            'dokter_id' => 'required|exists:dokters,dokter_id',
             'tanggal_reservasi' => 'required|date|after_or_equal:today',
-            'status' => 'required|in:confirmed,cancelled',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -98,26 +98,35 @@ class ReservationController extends Controller
             ], 422);
         }
 
-    $tanggal = Carbon::parse($request->tanggal_reservasi)->toDateString();
+    $tanggalReservasi = $request->tanggal_reservasi;
     $poliId = $request->poli_id;
 
     $jumlahAntrianSebelumnya = Reservation::where('poli_id', $poliId)
-        ->where('tanggal_reservasi', $tanggal)
+        ->where('tanggal_reservasi', $tanggalReservasi)
         ->where('status', 'confirmed')
         ->count();
     $nomorAntrian = $jumlahAntrianSebelumnya + 1;
 
     $poli = Poli::findOrFail($poliId);
-    $kodePoli = 'P'. $poli->poliID;
-    $nomorAntrianLengkap = $kodePoli . '-' . str_replace('-','', $tanggal) . '-' . str_pad($nomorAntrianBaru, 3, '0', STR_PAD_LEFT);
+    $kodePoli = 'P'. $poli->poli_id;
+    $nomorAntrianLengkap = $kodePoli . '-' . str_replace('-','', $tanggalReservasi) . '-' . str_pad($nomorAntrian, 3, '0', STR_PAD_LEFT);
 
         $reservation->verif_adminID = Auth::id();
         $reservation->poli_id = $poliId;
-        $reservation->jadwal_dokter_id = $request->jadwal_dokter_id;
-        $reservation->tanggal_reservasi = $tanggal;
+        $reservation->dokter_id = $request->dokter_id;
+        $reservation->tanggal_reservasi = $tanggalReservasi;
         $reservation->nomor_antrian = $nomorAntrianLengkap;
         $reservation->status = 'confirmed';
         $reservation->save();
+
+        Antrian::create([
+            'reservation_id' => $reservation->reservid,
+            'poli_id' => $poliId,
+            'dokter_id' => $request->dokter_id,
+            'nomor_antrian' => $nomorAntrianLengkap,
+            'tanggal_antrian' => $tanggalReservasi,
+            'status' => 'menunggu',
+        ]);
 
         return response()->json([
             'success' => true,
