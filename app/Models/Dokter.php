@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JadwalDokter;
 
 class Dokter extends Model
 {
@@ -12,12 +13,11 @@ class Dokter extends Model
     protected $table = 'dokters';
     protected $primaryKey = 'dokter_id';
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
 
     protected $fillable = [
-        'dokter_id',
         'nama_dokter',
         'bidang_keahlian',
         'tipe',
