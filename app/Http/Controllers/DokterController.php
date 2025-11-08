@@ -16,25 +16,14 @@ class DokterController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'dokter_id' => 'required|string|max:10|unique:master_dokter',
             'nama_dokter' => 'required|string|max:100',
-            'bidang_keahlian' => 'required|string|max:100',
-            'tipe' => 'required|char|max:1',
-            'aktif' => 'required|char|max:1',
-            'flags' => 'required|string|max:10',
-            'no_ktp' => 'required|string|max:16',
-            'praktek' => 'nullable|string|max:100',
-            'last_update' => 'nullable|date',
-            'telpon_praktek' => 'nullable|string|max:50',
-            'id_satu_sehat' => 'nullable|string|max:255',
-            'jenis_kelamin' => 'nullable|char|max:1',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $dokter = Dokter::create($validator->validated());
+        $dokter = Dokter::create($request->only((new \App\Models\Dokter)->getFillable()));
         return response()->json($dokter, 201);
     }
 
@@ -43,27 +32,14 @@ class DokterController extends Controller
         return $dokter;
     }
 
-    public function update(Request $request, Dokter $dokter)
+    public function update(Request $request, $dokter_id)
     {
-        $validator = Validator::make($request->all(), [
-            'nama_dokter' => 'sometimes|required|string|max:100',
-            'bidang_keahlian' => 'sometimes|required|string|max:100',
-            'tipe' => 'sometimes|required|char|max:1',
-            'aktif' => 'sometimes|required|char|max:1',
-            'flags' => 'sometimes|required|string|max:10',
-            'no_ktp' => 'sometimes|required|string|max:16',
-            'praktek' => 'nullable|string|max:100',
-            'last_update' => 'nullable|date',
-            'telpon_praktek' => 'nullable|string|max:50',
-            'id_satu_sehat' => 'nullable|string|max:255',
-            'jenis_kelamin' => 'nullable|char|max:1',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+        $dokter = Dokter::find($dokter_id);
+        if (!$dokter) {
+            return response()->json(['message' => 'Dokter tidak ditemukan'], 404);
         }
 
-        $dokter->update($validator->validated());
+        $dokter->update($request->all());
         return response()->json($dokter);
     }
 

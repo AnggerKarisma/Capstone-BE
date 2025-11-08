@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Dokter;
+use App\Models\Poli;
 
 class JadwalDokter extends Model
 {
@@ -11,7 +13,7 @@ class JadwalDokter extends Model
 
     protected $table = 'jadwal_dokter';
     public $incrementing = false; 
-    protected $primaryKey = ['dokter_id', 'poliID'];
+    protected $primaryKey = ['dokter_id', 'poli_id'];
     public $timestamps = false; 
 
     /**
@@ -20,7 +22,7 @@ class JadwalDokter extends Model
      */
     protected $fillable = [
         'dokter_id',
-        'poliID',
+        'poli_id',
         'gedung',
         'pelayanan_cash',
         'pelayanan_bpjs',
@@ -165,6 +167,6 @@ class JadwalDokter extends Model
      */
     public function poli()
     {
-        return $this->belongsTo(Poli::class, 'poliID', 'poliID');
+        return $this->belongsTo(Poli::class, 'poli_id', 'poli_id');
     }
 }
