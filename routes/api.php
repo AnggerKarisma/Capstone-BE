@@ -18,9 +18,7 @@ Route::post('/login-user', [UserAuthController::class, 'login']);
 Route::post('/logout-user', [UserAuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
     Route::post('/reservations', [ReservationController::class, 'store']);
@@ -54,9 +52,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::apiResource('dokters', DokterController::class);
 
     Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
-    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
     Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
     
 });
@@ -65,16 +60,17 @@ Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::get('/reservasi', [ReservasiController::class, 'index']);
+    Route::get('/reservasi', [ReservationController::class, 'index']);
 });
 
 //Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
+    Route::get('/user', [UserAuthController::class, 'index']);
+
     Route::get('/admins/{id}', [AdminController::class, 'show']); 
     Route::put('/admins/{id}', [AdminController::class, 'update']); 
     Route::get('/polis', [PoliController::class, 'index']);
-    Route::get('/polis/{id}', [PoliController::class, 'show']);
     Route::get('/penanggung-jawabs', [PenanggungJawabController::class, 'index']);
     Route::get('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'show']);
     Route::put('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'update']);

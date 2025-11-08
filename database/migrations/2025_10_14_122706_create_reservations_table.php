@@ -21,7 +21,8 @@ return new class extends Migration
             $table->enum('penjaminan',['asuransi','cash']);
             $table->string('nomor_ktp', 16);
             $table->text('keluhan');
-            $table->foreignId('poli_id')->nullable()->constrained(table:'polis',column:'poliID')->onDelete('set null');
+            $table->string('poli_id',10)->nullable();
+            $table->foreign('poli_id')->references('poli_id')->on('polis')->onDelete('set null');
             //$table->foreignId('jadwal_dokter_id')->constrained(table:'jadwal_dokters',column:'jadwaldokterid')->onDelete('set null');
             $table->string('nomor_antrian')->nullable();
             $table->date('tanggal_reservasi')->nullable();

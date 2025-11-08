@@ -74,7 +74,18 @@ class UserAuthController extends Controller
             'user' => $user
         ]);
     }
-
+    
+    public function index()
+    {
+        // 'with('profile')' akan sekaligus mengambil data profil mereka
+        $users = User::with('profile')->latest()->get(); 
+        
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
+    }
+    
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
