@@ -68,7 +68,6 @@ class PenanggungJawabController extends Controller
             $penanggungJawab->delete();
             return response()->json(['success' => true, 'message' => 'Penanggung Jawab berhasil dihapus.']);
         } catch (\Exception $e) {
-            // Menangani jika PJ masih terikat dengan reservasi (jika ada constraint DB)
             return response()->json(['success' => false, 'message' => 'Gagal menghapus: Penanggung jawab mungkin masih terikat data lain.'], 409);
         }
     }

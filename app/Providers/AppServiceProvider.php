@@ -10,17 +10,11 @@ use App\Policies\ReservationPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         Gate::policy(Reservation::class, ReservationPolicy::class);

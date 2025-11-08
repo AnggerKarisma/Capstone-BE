@@ -43,14 +43,12 @@ class AntrianController extends Controller
             'data' => [
                 'sedang_dipanggil' => $sedangDipanggil,
                 'sisa_antrian' => $sisaAntrian,
-                'daftar_tunggu' => $daftarTunggu, // Untuk list di dashboard Admin
-            ]
+                'daftar_tunggu' => $daftarTunggu,
+                ]
         ]);
     }
 
-    /**
-     * (Untuk Admin) Memanggil nomor antrian berikutnya.
-     */
+
     public function panggilBerikutnya(Request $request)
     {
         $request->validate([
@@ -58,12 +56,11 @@ class AntrianController extends Controller
         ]);
 
         $poli_id = $request->poli_id;
-        $admin_id = Auth::id(); // Admin yang sedang bertugas
+        $admin_id = Auth::id(); 
         $tanggal = Carbon::today();
 
         return DB::transaction(function () use ($poli_id, $admin_id, $tanggal) {
             
-            // 1. Selesaikan antrian yang 'dipanggil' oleh admin ini
             $masihDipanggil = Antrian::where('poli_id', $poli_id)
                 ->where('tanggal_antrian', $tanggal)
                 ->where('status', 'dipanggil')
@@ -77,7 +74,6 @@ class AntrianController extends Controller
                 ]);
             }
 
-            // 2. Ambil antrian 'menunggu' berikutnya
             $antrianBaru = Antrian::where('poli_id', $poli_id)
                 ->where('tanggal_antrian', $tanggal)
                 ->where('status', 'menunggu')
@@ -88,7 +84,6 @@ class AntrianController extends Controller
                 return response()->json(['success' => false, 'message' => 'Tidak ada antrian lagi'], 404);
             }
 
-            // 3. Update status antrian baru
             $antrianBaru->update([
                 'status' => 'dipanggil',
                 'waktu_panggil' => now(),

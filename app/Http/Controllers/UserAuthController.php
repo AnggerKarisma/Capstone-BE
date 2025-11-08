@@ -31,7 +31,7 @@ class UserAuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'nomor_telepon' => $request->nomor_telepon,
-            'password' => Hash::make($request->password), // Model User Anda sudah otomatis hash, tapi ini double-check
+            'password' => Hash::make($request->password), 
         ]);
 
         return response()->json([
@@ -75,9 +75,6 @@ class UserAuthController extends Controller
         ]);
     }
 
-    /**
-     * Logout untuk User (Pasien).
-     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

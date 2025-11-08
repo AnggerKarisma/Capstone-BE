@@ -57,13 +57,12 @@ class ChatController extends Controller
         $receiverModel = $receiverType === 'admin' ? Admin::class : User::class;
 
         $messages = Chat::where(function ($query) use ($user, $receiverModel, $receiverId) {
-            // 1. Pesan DARI kita UNTUK mereka
+            
             $query->where('senderable_id', $user->getKey())
                   ->where('senderable_type', get_class($user))
                   ->where('receiverable_id', $receiverId)
                   ->where('receiverable_type', $receiverModel);
         })->orWhere(function ($query) use ($user, $receiverModel, $receiverId) {
-            // 2. Pesan DARI mereka UNTUK kita
             $query->where('senderable_id', $receiverId)
                   ->where('senderable_type', $receiverModel)
                   ->where('receiverable_id', $user->getKey())
@@ -95,7 +94,6 @@ class ChatController extends Controller
                             ->union($sentTo) // Gabungkan keduanya
                             ->get();
 
-        // Anda perlu me-load data (nama, foto) dari hasil 'receivedFrom' ini di frontend
         return response()->json([
             'success' => true,
             'data' => $receivedFrom
