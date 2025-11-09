@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Models\Admin;
 use Laravel\Sanctum\Sanctum;
 
 return [
@@ -34,7 +36,7 @@ return [
     |
     */
 
-    'guard' => ['web'],
+    'guard' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -74,6 +76,10 @@ return [
     | request. You may change the middleware listed below as required.
     |
     */
+    'tokenable_models' => [
+        User::class,
+        Admin::class,
+    ],
 
     'middleware' => [
         'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,

@@ -23,6 +23,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'reservations',
+        'profile',
+        'chats',
     ];
     protected function casts(): array
     {
