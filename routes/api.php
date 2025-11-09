@@ -65,7 +65,7 @@ Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::get('/reservasi', [ReservasiController::class, 'index']);
+    // Route::get('/reservasi', [ReservasiController::class, 'index']);
 });
 
 //Akses admin dan superadmin
