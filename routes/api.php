@@ -18,6 +18,8 @@ use App\Http\Controllers\AntrianController;
 // Auth Pasien
 Route::post('/register', [UserAuthController::class, 'register']);
 Route::post('/login-user', [UserAuthController::class, 'login']);
+Route::post('/otp/request', [UserAuthController::class, 'requestOtp']);
+Route::post('/otp/login', [UserAuthController::class, 'loginWithOtp']);
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja

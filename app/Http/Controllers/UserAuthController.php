@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Carbon\Carbon;
+use App\Jobs\SendEmailOtpJob;
 
 class UserAuthController extends Controller
 {
@@ -77,7 +79,6 @@ class UserAuthController extends Controller
     
     public function index()
     {
-        // 'with('profile')' akan sekaligus mengambil data profil mereka
         $users = User::with('profile')->latest()->get(); 
         
         return response()->json([
@@ -91,5 +92,76 @@ class UserAuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged Out']);
+    }
+
+    public function requestOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|exists:users,email',
+        ],[ 
+            'email.exists' => 'Email tidak terdaftar',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        $otpCode = random_int(100000, 999999);
+        $expiresAt = Carbon::now()->addMinutes(15);
+
+        $user->update([
+            'otp_hash' => Hash::make($otpCode),
+            'otp_expires_at' => $expiresAt,
+        ]);
+
+        SendEmailOtpJob::dispatch($user->email, $otpCode);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP telah dikirim ke email Anda. (' . $user->email . '). Cek Inbox atau Spam.'
+        ]);
+    }
+
+    public function loginWithOtp(Request $request){
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|exists:users,email',
+            'otp_code' => 'required|numeric|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user->otp_hash || $user->otp_expires_at < Carbon::now()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode OTP tidak valid'
+            ], 401);
+        }
+
+        if (!Hash::check($request->otp_code, $user->otp_hash)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode OTP tidak valid'
+            ], 401);
+        }
+        $user->update([
+            'otp_hash' => null,
+            'otp_expires_at' => null,
+        ]);
+
+        $token = $user->createToken('user-auth-token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ]);
     }
 }

@@ -34,5 +34,16 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'whatsapp' => [
+        'endpoint' => env('WHATSAPP_API_ENDPOINT'),
+        'api_key' => env('WHATSAPP_API_KEY'),
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_ACCOUNT_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
+        'template_sid' => env('TWILIO_WHATSAPP_TEMPLATE_SID'),
+    ],
 
 ];
