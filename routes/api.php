@@ -17,15 +17,13 @@ use App\Http\Controllers\AntrianController;
 
 // Auth Pasien
 Route::post('/register', [UserAuthController::class, 'register']);
-Route::post('/login-user', [UserAuthController::class, 'login']);
+// Route::post('/login-user', [UserAuthController::class, 'login']);
 Route::post('/otp/request', [UserAuthController::class, 'requestOtp']);
 Route::post('/otp/login', [UserAuthController::class, 'loginWithOtp']);
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
 
-// Rute 'jadwal-dokter' yang tidak aman
-Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']); // INI TIDAK AMAN, TAPI SAYA BIARKAN SESUAI FILE ANDA
 
 
 // 'auth:sanctum' akan otomatis menggunakan guard 'api' (pasien)
@@ -35,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'store']);
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/my-reservations', function (Request $request) {
-        return $request->user()->reservations()->with('poli', 'dokter')->latest()->get(); // ganti jadwalDokter
+        return $request->user()->reservations()->with('poli', 'jadwalDokter')->latest()->get(); 
     });
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
@@ -53,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 // Kita harus spesifik: 'auth:sanctum:admin-api'
-Route::middleware(['auth:sanctum:admin-api', 'role:superadmin,admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']); // Logout Admin
 
@@ -91,7 +89,7 @@ Route::middleware(['auth:sanctum:admin-api', 'role:superadmin,admin'])->group(fu
 });
 
 //Akses khusus superadmin (Perlu token 'admin-api')
-Route::middleware(['auth:sanctum:admin-api', 'role:superadmin'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::get('/admins', [AdminController::class, 'index']);
     Route::post('/admins', [AdminController::class, 'store']);
     Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 

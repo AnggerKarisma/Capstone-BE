@@ -38,7 +38,7 @@ class User extends Authenticatable
     }
     public function reservations()
     {
-        return $this->hasMany(Reservation::class, 'user_id', 'userid');
+        return $this->hasMany(Reservation::class, 'booked_user_id', 'userid');
     }
     public function profile()
     {

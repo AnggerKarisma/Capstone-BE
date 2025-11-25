@@ -43,39 +43,39 @@ class UserAuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+    // public function login(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'email' => 'required|email',
+    //         'password' => 'required|string',
+    //     ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
+    //     if ($validator->fails()) {
+    //         return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+    //     }
 
-        // Cari user
-        $user = User::where('email', $request->email)->first();
+    //     // Cari user
+    //     $user = User::where('email', $request->email)->first();
 
-        // Cek user dan password
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email atau Password salah'
-            ], 401);
-        }
+    //     // Cek user dan password
+    //     if (!$user || !Hash::check($request->password, $user->password)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Email atau Password salah'
+    //         ], 401);
+    //     }
 
-        // Buat token
-        $token = $user->createToken('user-auth-token')->plainTextToken;
+    //     // Buat token
+    //     $token = $user->createToken('user-auth-token')->plainTextToken;
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login berhasil',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Login berhasil',
+    //         'access_token' => $token,
+    //         'token_type' => 'Bearer',
+    //         'user' => $user
+    //     ]);
+    // }
     
     public function index()
     {
@@ -139,14 +139,14 @@ class UserAuthController extends Controller
         if (!$user->otp_hash || $user->otp_expires_at < Carbon::now()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kode OTP tidak valid'
+                'message' => 'Kode OTP tidak valid atau kadaluarsa.'
             ], 401);
         }
 
         if (!Hash::check($request->otp_code, $user->otp_hash)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kode OTP tidak valid'
+                'message' => 'Kode OTP salah'
             ], 401);
         }
         $user->update([
@@ -154,11 +154,11 @@ class UserAuthController extends Controller
             'otp_expires_at' => null,
         ]);
 
-        $token = $user->createToken('user-auth-token')->plainTextToken;
+        $token = $user->createToken('user-auth-token-otp')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Login berhasil',
+            'message' => 'Login OTP berhasil',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user

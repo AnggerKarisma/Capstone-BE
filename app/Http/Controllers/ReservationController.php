@@ -67,7 +67,7 @@ class ReservationController extends Controller
     public function show(Reservation $reservation)
     {
         $this->authorize('view', $reservation);
-        $reservation->load(['user', 'admin', 'poli', 'dokter', 'penanggungJawab']);
+        $reservation->load(['user', 'admin', 'poli', 'jadwalDokter', 'penanggungJawab']);
 
         return response()->json([
             'success' => true,
@@ -99,20 +99,20 @@ class ReservationController extends Controller
         }
 
     $tanggalReservasi = $request->tanggal_reservasi;
-    $poliId = $request->poli_id;
+    $poli_id = $request->poli_id;
 
-    $jumlahAntrianSebelumnya = Reservation::where('poli_id', $poliId)
+    $jumlahAntrianSebelumnya = Reservation::where('poli_id', $poli_id)
         ->where('tanggal_reservasi', $tanggalReservasi)
         ->where('status', 'confirmed')
         ->count();
     $nomorAntrian = $jumlahAntrianSebelumnya + 1;
 
-    $poli = Poli::findOrFail($poliId);
+    $poli = Poli::findOrFail($poli_id);
     $kodePoli = 'P'. $poli->poli_id;
     $nomorAntrianLengkap = $kodePoli . '-' . str_replace('-','', $tanggalReservasi) . '-' . str_pad($nomorAntrian, 3, '0', STR_PAD_LEFT);
 
         $reservation->verif_adminID = Auth::id();
-        $reservation->poli_id = $poliId;
+        $reservation->poli_id = $poli_id;
         $reservation->dokter_id = $request->dokter_id;
         $reservation->tanggal_reservasi = $tanggalReservasi;
         $reservation->nomor_antrian = $nomorAntrianLengkap;
@@ -121,7 +121,7 @@ class ReservationController extends Controller
 
         Antrian::create([
             'reservation_id' => $reservation->reservid,
-            'poli_id' => $poliId,
+            'poli_id' => $poli_id,
             'dokter_id' => $request->dokter_id,
             'nomor_antrian' => $nomorAntrianLengkap,
             'tanggal_antrian' => $tanggalReservasi,
