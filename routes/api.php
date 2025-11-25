@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserAuthController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
@@ -49,8 +50,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
-// Kita harus spesifik: 'auth:sanctum:admin-api'
+//Akses khusus admin 
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Route::get('/reservasi', [ReservasiController::class, 'index']);
+});
+
+//Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']); // Logout Admin
@@ -90,8 +97,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
 
 //Akses khusus superadmin (Perlu token 'admin-api')
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
-    Route::get('/admins', [AdminController::class, 'index']);
-    Route::post('/admins', [AdminController::class, 'store']);
     Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
     
     Route::post('/polis', [PoliController::class, 'store']);
@@ -102,4 +107,21 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
 
     Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
     Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
+    
+    Route::get('/admins', [AdminController::class, 'index']);      
+    Route::post('/admins', [AdminController::class, 'store']);    
+    Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
+
+    Route::get('/users', [UserController::class, 'index']);        
+    Route::get('/users/{id}', [UserController::class, 'show']);    
+    Route::put('/users/{id}', [UserController::class, 'update']);  
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    
+    Route::post('/polis', [PoliController::class, 'store']);
+    Route::put('/polis/{poli_id}', [PoliController::class, 'update']);
+    Route::delete('/polis/{poli_id}', [PoliController::class, 'destroy']);    
+
+    Route::apiResource('dokters', DokterController::class);
+
+    
 });

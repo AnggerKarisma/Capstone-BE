@@ -78,12 +78,15 @@ class JadwalDokterController extends Controller
                 ], 422);
             }
 
-            $data = $request->all();
+            $data = array_map(function($value) {
+                return $value === "" ? null : $value;
+            }, $request->all());
 
             $data['last_update'] = now();
-            $data['last_update_by'] = Auth::user()->name ?? 'system';
+            $user = Auth::user();
+            $data['last_update_by'] = $user ? ($user->name ?? $user->Nama ?? 'system') : 'system';
 
-            $jadwal = JadwalDokter::create($data);
+            JadwalDokter::create($data);
 
             $jadwal = JadwalDokter::where('dokter_id', $request->dokter_id)
                 ->where('poli_id', $request->poli_id)
@@ -103,10 +106,10 @@ class JadwalDokterController extends Controller
             ], 422);
         } catch (Exception $e) {
             Log::error('Error creating jadwal: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat menyimpan jadwal',
+                'message' => 'Terjadi kesalahan saat menyimpan jadwal: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -126,13 +129,18 @@ class JadwalDokterController extends Controller
                 ], 404);
             }
 
-            $data = $request->all();
+            $cleanInput = $request->except(['dokter', 'poli', '_method', '_token']);
+
+            $data = array_map(function($value) {
+                return $value === "" ? null : $value;
+            }, $cleanInput);
 
             $data['dokter_id'] = $dokter_id;
             $data['poli_id'] = $poli_id;
 
             $data['last_update'] = now();
-            $data['last_update_by'] = Auth::user()->name ?? 'system';
+            $user = Auth::user();
+            $data['last_update_by'] = $user ? ($user->name ?? $user->Nama ?? 'system') : 'system';
 
             JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poli_id', $poli_id)
@@ -140,6 +148,7 @@ class JadwalDokterController extends Controller
 
             $jadwal = JadwalDokter::where('dokter_id', $dokter_id)
                 ->where('poli_id', $poli_id)
+                ->with(['dokter', 'poli']) // Load relasi untuk dikembalikan ke FE
                 ->first();
 
             return response()->json([
@@ -158,7 +167,7 @@ class JadwalDokterController extends Controller
             Log::error('Error updating jadwal: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat update jadwal',
+                'message' => 'Terjadi kesalahan saat update jadwal: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
