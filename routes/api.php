@@ -50,13 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
-
-//Akses khusus admin 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    // Route::get('/reservasi', [ReservasiController::class, 'index']);
-});
-
 //Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
@@ -76,10 +69,9 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::delete('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'destroy']);
     
     // Manajemen Reservasi
-    Route::get('/reservasi', [ReservationController::class, 'index']); // Typo sudah diperbaiki
-    Route::get('/reservasi/{reservation}', [ReservationController::class, 'show']);
-    Route::post('/reservasi/{reservation}/verify', [ReservationController::class, 'verify']);
-    Route::post('/reservasi/{reservation}/cancel', [ReservationController::class, 'cancel']);
+    Route::get('/reservations', [ReservationController::class, 'index']); // Typo sudah diperbaiki
+    Route::post('/reservations/{reservation}/verify', [ReservationController::class, 'verify']);
+    Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
     
     // Chat (Admin)
     Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);

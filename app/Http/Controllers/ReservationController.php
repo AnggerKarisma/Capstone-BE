@@ -16,7 +16,7 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Reservation::with(['user', 'poli', 'dokter', 'penanggungJawab']);
+        $query = Reservation::with(['user', 'poli', 'jadwalDokter', 'penanggungJawab']);
 
         if ($request->has('status')&& in_array($request->status, ['pending', 'confirmed', 'cancelled'])) {
             $query->where('status', $request->status);
