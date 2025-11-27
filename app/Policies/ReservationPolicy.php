@@ -5,6 +5,7 @@ namespace App\Policies;
 use Illuminate\Auth\Access\Response;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 class ReservationPolicy
