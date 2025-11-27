@@ -60,14 +60,9 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::apiResource('dokters', DokterController::class);
 
     Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
-    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
     Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
-    
 });
 
-Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
 
 //Akses khusus admin 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
