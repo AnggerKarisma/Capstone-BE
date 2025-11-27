@@ -27,7 +27,7 @@ class reservation extends Model
         'keluhan',
         'status',
         'poli_id',
-        'jadwal_dokter_id',
+        'dokter_id',
         'nomor_antrian',
         'tanggal_reservasi',
     ];
@@ -52,9 +52,9 @@ class reservation extends Model
         return $this->belongsTo(Poli::class, 'poli_id', 'poli_id');
     }
 
-    public function jadwalDokter()
+    public function dokter()
     {
-        return $this->belongsTo(JadwalDokter::class, 'jadwal_dokter_id', 'jadwaldokterid');
+        return $this->belongsTo(Dokter::class, 'dokter_id', 'dokter_id');
     }
 
     public function penanggungJawab()
