@@ -16,7 +16,10 @@ class chat extends Model
         'receiverable_id',
         'receiverable_type',
         'message',
+        'is_read',
     ];
+
+    protected $with = ['senderable', 'receiverable'];
 
     public function senderable()
     {

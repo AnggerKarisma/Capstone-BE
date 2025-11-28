@@ -117,7 +117,7 @@ class ReservationController extends Controller
 
                 // Generate Format Nomor Antrian (Contoh: P01-20251127-001)
                 $poli = Poli::findOrFail($poli_id);
-                $kodePoli = 'P' . $poli->poli_id; // Sesuaikan logic kode poli
+                $kodePoli = $poli->poli_id; // Sesuaikan logic kode poli
                 $dateStr = str_replace('-', '', $tanggalReservasi);
                 $nomorAntrianLengkap = sprintf("%s-%s-%03d", $kodePoli, $dateStr, $nomorAntrian);
 

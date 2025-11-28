@@ -109,11 +109,5 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update']);  
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     
-    Route::post('/polis', [PoliController::class, 'store']);
-    Route::put('/polis/{poli_id}', [PoliController::class, 'update']);
-    Route::delete('/polis/{poli_id}', [PoliController::class, 'destroy']);    
-
-    Route::apiResource('dokters', DokterController::class);
-
-    
+       
 });
