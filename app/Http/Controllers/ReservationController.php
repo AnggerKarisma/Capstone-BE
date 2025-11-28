@@ -10,6 +10,8 @@ use App\Models\Antrian;
 use App\Models\dokter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -56,16 +58,62 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        $data = $validator->validated();
-        $data['booked_user_id'] = Auth::id();
-        $data['status'] = 'pending';
+        $input = $request->all();
+        $user = Auth::user(); 
+        $input['booked_user_id'] = $user->userid;
+        $input['status'] = 'pending';
 
-        $reservation = Reservation::create($data);
+        $rekomendasiAI = null;
+        $isMatch = false;
+
+        try {
+            $usia = 30; 
+            $jk = 'L';
+
+            if ($user->profile) {
+                if ($user->profile->tanggal_lahir) {
+                    $usia = Carbon::parse($user->profile->tanggal_lahir)->age;
+                }
+                $jk = ($user->profile->jenis_kelamin == 'Perempuan') ? 'P' : 'L';
+            }
+
+            $response = Http::timeout(5)->post('http://127.0.0.1:5000/predict', [
+                'keluhan' => $request->keluhan,
+                'usia' => $usia,
+                'jenis_kelamin' => $jk,
+                'riwayat_penyakit' => '' 
+            ]);
+
+            if ($response->successful()) {
+                $mlResult = $response->json();
+
+                $rekomendasiAI = $mlResult['rekomendasi_poli'] ?? null;
+
+                $poliUser = Poli::find($request->poli_id);
+                if ($poliUser && $rekomendasiAI) {
+                    $namaPoliUser = strtoupper($poliUser->poli_name);
+                    $namaPoliAI = strtoupper($rekomendasiAI);
+
+                    if (str_contains($namaPoliUser, $namaPoliAI) || str_contains($namaPoliAI, $namaPoliUser)) {
+                        $isMatch = true;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal koneksi ke ML: " . $e->getMessage());
+        }
+
+        $input['rekomendasi_ai'] = $rekomendasiAI;
+        $input['sesuai_ai'] = $isMatch ? 1 : 0;
+
+        $reservation = Reservation::create($input);
+
         return response()->json([
             'success' => true,
             'message' => 'Reservasi berhasil dibuat',
-            'data' => $reservation
-        ],201);
+            'data' => $reservation,
+            'ai_suggestion' => $rekomendasiAI 
+        ], 201);
     }
 
     public function show(Reservation $reservation)
