@@ -109,42 +109,5 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update']);  
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     
-    Route::post('/polis', [PoliController::class, 'store']);
-    Route::put('/polis/{poli_id}', [PoliController::class, 'update']);
-    Route::delete('/polis/{poli_id}', [PoliController::class, 'destroy']);    
-
-    Route::apiResource('dokters', DokterController::class);
-
-    Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
-    Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
-});
-
-
-//Akses khusus admin 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    // Route::get('/reservasi', [ReservasiController::class, 'index']);
-});
-
-//Akses admin dan superadmin
-Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
-
-    Route::get('/admins/{id}', [AdminController::class, 'show']); 
-    Route::put('/admins/{id}', [AdminController::class, 'update']); 
-    Route::get('/polis', [PoliController::class, 'index']);
-    Route::get('/polis/{id}', [PoliController::class, 'show']);
-    Route::get('/penanggung-jawabs', [PenanggungJawabController::class, 'index']);
-    Route::get('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'show']);
-    Route::put('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'update']);
-    Route::delete('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'destroy']);
-    Route::get('/reservasi/{reservation}', [ReservationController::class, 'show']);
-    Route::post('/reservasi/{reservation}/verify', [ReservationController::class, 'verify']);
-    Route::post('/reservasi/{reservation}/cancel', [ReservationController::class, 'cancel']);
-    Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);
-    Route::get('/admin/chat/contacts', [ChatController::class, 'getContacts']);
-    Route::get('/admin/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
-    Route::get('/polis/{poli_id}', [PoliController::class, 'show']);
-
-    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
+       
 });

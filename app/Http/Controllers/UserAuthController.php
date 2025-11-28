@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -28,54 +30,67 @@ class UserAuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+        try{
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'nomor_telepon' => $request->nomor_telepon,
-            'password' => Hash::make($request->password), 
+            $otpCode = random_int(100000, 999999);
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'nomor_telepon' => $request->nomor_telepon,
+                'password' => Hash::make($request->password),
+                'otp_hash' => Hash::make($otpCode),
+                'otp_expires_at' => Carbon::now()->addMinutes(15),
+                'email_verified_at' => null,
+            ]);
+            dispatch(new SendEmailOtpJob($user->email, $otpCode));
+            return response()->json([
+                'success' => true,
+                'message' => 'Registrasi berhasil. Silakan cek email Anda untuk kode OTP.'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registrasi gagal',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        if(!Auth)
+        // Cari user
+        $user = User::where('email', $request->email)->first();
+
+        // Cek user dan password
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau Password salah'
+            ], 401);
+        }
+
+        // Buat token
+        $token = $user->createToken('user-auth-token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Registrasi berhasil',
-            'data' => $user
-        ], 201);
+            'message' => 'Login berhasil',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user
+        ]);
     }
-
-    // public function login(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'email' => 'required|email',
-    //         'password' => 'required|string',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-    //     }
-
-    //     // Cari user
-    //     $user = User::where('email', $request->email)->first();
-
-    //     // Cek user dan password
-    //     if (!$user || !Hash::check($request->password, $user->password)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Email atau Password salah'
-    //         ], 401);
-    //     }
-
-    //     // Buat token
-    //     $token = $user->createToken('user-auth-token')->plainTextToken;
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Login berhasil',
-    //         'access_token' => $token,
-    //         'token_type' => 'Bearer',
-    //         'user' => $user
-    //     ]);
-    // }
     
     public function index()
     {

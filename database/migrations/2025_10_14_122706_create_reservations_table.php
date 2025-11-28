@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('booked_user_id')->constrained(table:'users',column:'userid')->onDelete('cascade');
             $table->foreignId('verif_adminID')->nullable()->constrained(table:'admins',column:'adminID')->onDelete('set null');
             $table->foreignId('penanggung_jawab_id')->nullable()->constrained(table:'penanggung_jawabs',column:'PjId')->onDelete('set null');
+
             $table->string('nama');
             $table->string('email');
             $table->string('tempat_lahir');
@@ -20,10 +21,18 @@ return new class extends Migration
             $table->string('nomor_whatsapp');
             $table->enum('penjaminan',['asuransi','cash']);
             $table->string('nomor_ktp', 16);
+
             $table->text('keluhan');
+
+            $table->string('rekomendasi_ai')->nullable(); 
+            $table->boolean('sesuai_ai')->default(0)->nullable();
+
             $table->string('poli_id',10)->nullable();
             $table->foreign('poli_id')->references('poli_id')->on('polis')->onDelete('set null');
-            //$table->foreignId('jadwal_dokter_id')->constrained(table:'jadwal_dokters',column:'jadwaldokterid')->onDelete('set null');
+
+            $table->unsignedBigInteger('dokter_id')->nullable(); 
+            $table->foreign('dokter_id')->references('dokter_id')->on('dokters')->onDelete('set null');
+
             $table->string('nomor_antrian')->nullable();
             $table->date('tanggal_reservasi')->nullable();
             $table->enum('status',['pending','confirmed','cancelled'])->default('pending');

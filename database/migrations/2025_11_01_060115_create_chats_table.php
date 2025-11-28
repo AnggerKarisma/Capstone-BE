@@ -17,6 +17,7 @@ return new class extends Migration
             $table->morphs('receiverable');
             $table->text('message');
             $table->timestamps();
+            $table->boolean('is_read')->default(false);
         });
     }
 

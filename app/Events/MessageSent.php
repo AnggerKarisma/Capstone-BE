@@ -4,8 +4,11 @@
 namespace App\Events;
 
 use App\Models\Chat;
+use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel; // <-- Gunakan Private
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast; // <-- Penting
 use Illuminate\Foundation\Events\Dispatchable;
@@ -24,15 +27,15 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        // Kirim ke channel pribadi milik si PENERIMA
-        $receiver = $this->chat->receiverable;
-        
-        $type = $receiver instanceof \App\Models\Admin ? 'admin' : 'user';
-        $key = $receiver instanceof \App\Models\Admin ? $receiver->adminID : $receiver->userid;
-        
-        // cth: 'chat.admin.5' atau 'chat.user.1'
-        return [
-            new PrivateChannel("chat.{$type}.{$key}"),
+        if ($this->chat->receiverable_type === Admin::class){
+            return [new PrivateChannel('chat.admin')
         ];
+    }
+    if ($this->chat->receiverable_type === User::class){
+        return [
+            new PrivateChannel('chat.user.' . $this->chat->receiverable_id)
+        ];
+    }
+    return [];
     }
 }
