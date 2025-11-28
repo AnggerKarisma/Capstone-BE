@@ -12,13 +12,9 @@ return new class extends Migration
             $table->id();
             
             $table->foreignId('reservation_id')->constrained(table:'reservations', column:'reservid')->onDelete('cascade');
-
-            $table->string('poli_id', 10);
+            $table->string('poli_id',10)->nullable();
             $table->foreign('poli_id')->references('poli_id')->on('polis')->onDelete('cascade');
-
-            $table->unsignedBigInteger('dokter_id');
-            $table->foreign('dokter_id')->references('dokter_id')->on('dokters')->onDelete('cascade');
-
+            $table->foreignId('dokter_id')->constrained(table:'dokters', column:'dokter_id')->onDelete('cascade');
             $table->string('nomor_antrian');
             $table->date('tanggal_antrian');
             $table->enum('status', ['menunggu', 'dipanggil', 'selesai', 'dilewati'])->default('menunggu');

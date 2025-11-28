@@ -19,10 +19,15 @@ class User extends Authenticatable
         'email',
         'password',
         'nomor_telepon',
+        'otp_hash',
+        'otp_expires_at',
     ];
     protected $hidden = [
         'password',
         'remember_token',
+        'reservations',
+        'profile',
+        'chats',
     ];
     protected function casts(): array
     {
@@ -33,7 +38,7 @@ class User extends Authenticatable
     }
     public function reservations()
     {
-        return $this->hasMany(Reservation::class, 'user_id', 'userid');
+        return $this->hasMany(Reservation::class, 'booked_user_id', 'userid');
     }
     public function profile()
     {

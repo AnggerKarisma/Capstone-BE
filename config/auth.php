@@ -42,11 +42,10 @@ return [
         ],
         'sanctum' => [
             'driver' => 'sanctum',
-            'provider' => 'admins', // ←    Pastikan ini 'admins'
+            'provider' => null, 
         ],
     ],
-    
-
+        
     /*
     |--------------------------------------------------------------------------
     | User Providers
@@ -65,20 +64,17 @@ return [
     */
 
     'providers' => [
-        // 'users' => [
-        //     'driver' => 'eloquent',
-        //     'model' => env('AUTH_MODEL', App\Models\User::class),
-        // ],
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => User::class,
+        ],
 
         'admins' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
+            'model' => Admin::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        
     ],
 
     /*
@@ -120,6 +116,6 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+    'password_timeout' => 10800,
 
 ];
