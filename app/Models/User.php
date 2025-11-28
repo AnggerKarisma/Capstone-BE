@@ -21,6 +21,7 @@ class User extends Authenticatable
         'nomor_telepon',
         'otp_hash',
         'otp_expires_at',
+        'email_verified_at',
     ];
     protected $hidden = [
         'password',
@@ -44,7 +45,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class, 'user_id', 'userid');
     }
-    public function chats()
+    public function Chats()
     {
         return $this->morphMany(Chat::class, 'senderable');
     }
