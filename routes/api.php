@@ -10,9 +10,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DokterController;
+use App\Http\Controllers\JadwalDokterController;
+use App\Http\Controllers\RekamMedisController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
-use App\Http\Controllers\JadwalDokterController;
 use App\Http\Controllers\AntrianController;
 
 
@@ -24,8 +25,6 @@ Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
-
-
 
 // 'auth:sanctum' akan otomatis menggunakan guard 'api' (pasien)
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,7 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
 });
-
 
 //Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
@@ -108,6 +106,9 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);    
     Route::put('/users/{id}', [UserController::class, 'update']);  
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-    
-       
+});
+
+//Rekam Medis
+Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
+    Route::apiResource('rekam-medis', RekamMedisController::class); 
 });

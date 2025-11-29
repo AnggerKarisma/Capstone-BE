@@ -24,6 +24,7 @@ class RekamMedisController extends Controller
             'gejala' => 'nullable|string',
             'diagnosis' => 'nullable|string',
             'tindakan' => 'nullable|string',
+            'resep_obat' => 'nullable|string',
             'tanggal_diperiksa' => 'required|date',
         ], [
             'reservasi_id.unique' => 'Rekam medis untuk reservasi ini sudah ada.'
@@ -36,13 +37,19 @@ class RekamMedisController extends Controller
         try {
             DB::beginTransaction();
 
+            $reservasi = Reservation::find($request->reservasi_id);
+
+            // Tidak boleh buat rekam medis jika belum dikonfirmasi
+            if ($reservasi->status !== 'confirmed') {
+                return response()->json([
+                    'message' => 'Reservasi belum dikonfirmasi sehingga belum bisa dibuat rekam medis.'
+                ], 409);
+            }
+
             $rekamMedis = RekamMedis::create($validator->validated());
 
-            $reservasi = Reservation::find($request->reservasi_id);
-            if ($reservasi) {
-                $reservasi->status = 'selesai'; 
-                $reservasi->save();
-            }
+            $reservasi->status = 'confirmed';
+            $reservasi->save();
 
             DB::commit();
 
@@ -57,18 +64,19 @@ class RekamMedisController extends Controller
         }
     }
 
-    public function show(RekamMedis $rekamMedi)
+    public function show(RekamMedis $rekamMedis)
     {
-        return $rekamMedi->load('reservasi');
+        return $rekamMedis->load('reservasi');
     }
 
-    public function update(Request $request, RekamMedis $rekamMedi)
+    public function update(Request $request, RekamMedis $rekamMedis)
     {
         $validator = Validator::make($request->all(), [
             'no_medrec' => 'sometimes|required|string',
             'gejala' => 'nullable|string',
             'diagnosis' => 'nullable|string',
             'tindakan' => 'nullable|string',
+            'resep_obat' => 'nullable|string',
             'tanggal_diperiksa' => 'sometimes|required|date',
         ]);
 
@@ -76,17 +84,17 @@ class RekamMedisController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $rekamMedi->update($validator->validated());
+        $rekamMedis->update($validator->validated());
 
         return response()->json([
             'message' => 'Rekam medis berhasil diupdate.',
-            'data' => $rekamMedi
+            'data' => $rekamMedis->load('reservasi')
         ]);
     }
 
-    public function destroy(RekamMedis $rekamMedi)
+    public function destroy(RekamMedis $rekamMedis)
     {
-        $rekamMedi->delete();
+        $rekamMedis->delete();
         return response()->json(['message' => 'Rekam medis berhasil dihapus.'], 200);
     }
 }

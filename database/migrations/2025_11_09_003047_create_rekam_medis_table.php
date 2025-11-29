@@ -20,6 +20,7 @@ return new class extends Migration
             $table->text('gejala')->nullable(); 
             $table->text('diagnosis')->nullable(); 
             $table->text('tindakan')->nullable();
+            $table->text('resep_obat')->nullable();
             $table->dateTime('tanggal_diperiksa'); 
 
             $table->timestamps(); 

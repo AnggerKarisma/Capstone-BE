@@ -34,6 +34,7 @@ class ReservationController extends Controller
             'data' => $reservations
         ]);
     }
+    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
