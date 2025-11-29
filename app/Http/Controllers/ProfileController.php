@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\profile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\validation\Rule;
+
+
 
 class ProfileController extends Controller
 {
@@ -29,7 +32,7 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'lokasi' => 'nullable|string|max:255',
             'jenis_kelamin' => ['nullable', Rule::in(['laki-laki', 'Perempuan'])],
             'noKTP' => ['nullable', 'string', 'digits:16', Rule::unique('profiles')->ignore($user->profile->id ?? null, 'id')],
@@ -47,16 +50,36 @@ class ProfileController extends Controller
             'kecamatan' => 'nullable|string|max:100',
             'kelurahan' => 'nullable|string|max:100',
             'nomor_telepon' => 'nullable|string|max:15|unique:profiles,nomor_telepon',
-            'nomor_pegawai' => ['nullable', 'string', 'max:50', Rule::unique('profiles')->ignore($user->profile->id ?? null),
-        ],
+            'nomor_pegawai' => ['nullable', 'string', 'max:50', Rule::unique('profiles')->ignore($user->profile->id ?? null)],
+            'penjaminan' => 'required|in:asuransi,cash',
+            'nama_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:100',
+            'nomor_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:50',
+        ], [
+            'nama_asuransi.required_if' => 'Nama asuransi wajib diisi jika penjaminan adalah asuransi.',
+            'nomor_asuransi.required_if' => 'Nomor asuransi wajib diisi jika penjaminan adalah asuransi.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        if(!isset($data['penjaminan'])){
+            $data['penjaminan'] = 'cash';
+        }
 
         $profile = $user->profile()->updateOrCreate(
             ['user_id' => $user->userid],
-            $validatedData
+            $data
         );
 
         return response()->json([
+            'success' => true,
             'message' => 'Profile berhasil dibuat',
             'data' => $profile
         ], 200);

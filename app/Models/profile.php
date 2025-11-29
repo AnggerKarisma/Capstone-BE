@@ -28,6 +28,9 @@ class profile extends Model
         'kelurahan',
         'nomor_telepon',
         'nomor_pegawai',
+        'penjaminan',
+        'nama_asuransi',
+        'nomor_asuransi',
     ];
 
     public function user(): BelongsTo
