@@ -31,10 +31,11 @@ class ProfileController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        $profileId = $user->profile->id ?? null;
 
         $validator = Validator::make($request->all(), [
             'lokasi' => 'nullable|string|max:255',
-            'jenis_kelamin' => ['nullable', Rule::in(['laki-laki', 'Perempuan'])],
+            'jenis_kelamin' => ['nullable', Rule::in(['Laki-laki', 'Perempuan'])],
             'noKTP' => ['nullable', 'string', 'digits:16', Rule::unique('profiles')->ignore($user->profile->id ?? null, 'id')],
             'suku' => 'nullable|string|max:100',
             'tempat_lahir' => 'nullable|string|max:100',
@@ -49,8 +50,8 @@ class ProfileController extends Controller
             'kota/kabupaten' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
             'kelurahan' => 'nullable|string|max:100',
-            'nomor_telepon' => 'nullable|string|max:15|unique:profiles,nomor_telepon',
-            'nomor_pegawai' => ['nullable', 'string', 'max:50', Rule::unique('profiles')->ignore($user->profile->id ?? null)],
+            'nomor_telepon' => ['nullable','string','max:15', Rule::unique('profiles','nomor_telepon')->ignore($profileId)],
+            'nomor_pegawai' => ['nullable', 'string', 'max:50', Rule::unique('profiles')->ignore($profileId)],
             'penjaminan' => 'required|in:asuransi,cash',
             'nama_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:100',
             'nomor_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:50',
