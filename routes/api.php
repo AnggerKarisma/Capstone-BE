@@ -10,9 +10,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PoliController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DokterController;
+use App\Http\Controllers\JadwalDokterController;
+use App\Http\Controllers\RekamMedisController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
-use App\Http\Controllers\JadwalDokterController;
 use App\Http\Controllers\AntrianController;
 
 
@@ -49,7 +50,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
 });
 
-
 //Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
@@ -84,6 +84,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
 
     // Antrian (Admin)
     Route::post('/antrian/panggil-berikutnya', [AntrianController::class, 'panggilBerikutnya']);
+
+    Route::apiResource('rekam-medis', RekamMedisController::class); 
 });
 
 //Akses khusus superadmin (Perlu token 'admin-api')
@@ -107,6 +109,4 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);    
     Route::put('/users/{id}', [UserController::class, 'update']);  
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-    
-       
-}); 
+});

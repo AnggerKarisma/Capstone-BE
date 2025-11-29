@@ -19,6 +19,7 @@ class RekamMedis extends Model
         'gejala',
         'diagnosis',
         'tindakan',
+        'resep_obat',
         'tanggal_diperiksa',
     ];
 
