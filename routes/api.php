@@ -24,7 +24,7 @@ Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
-
+Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
 
 
 // 'auth:sanctum' akan otomatis menggunakan guard 'api' (pasien)
@@ -79,7 +79,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::get('/admin/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
     
     // Jadwal Dokter (Rute duplikat dihapus)
-    Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
     Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
     Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
 
@@ -110,4 +109,4 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     
        
-});
+}); 

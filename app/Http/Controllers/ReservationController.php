@@ -7,7 +7,7 @@ use App\Models\Reservation;
 use App\Models\Poli;
 use App\Models\PenanggungJawab;
 use App\Models\Antrian;
-use App\Models\dokter;
+use App\Models\Dokter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -34,21 +34,47 @@ class ReservationController extends Controller
             'data' => $reservations
         ]);
     }
+    
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:100',
-            'email' => 'required|email|max:100',
-            'tempat_lahir' => 'required|string|max:100',
-            'tanggal_lahir' => 'required|date',
-            'nomor_whatsapp' => 'required|string|max:15',
-            'penjaminan' => 'required|in:asuransi,cash',
-            'nomor_ktp' => 'required|string|size:16',
-            'keluhan' => 'required|string|max:1000',
+        $rules = [
             'poli_id' => 'required|exists:polis,poli_id',
             'tanggal_reservasi' => 'required|date|after_or_equal:today',
-            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,PjId',
-        ]);
+            'keluhan' => 'required|string|max:1000',
+            'is_self' => 'required|boolean',
+            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,id',
+        ];
+        
+        $isSelf = $request->boolean('is_self');
+        if (!$isSelf){
+            $rules = array_merge($rules, [
+                'nama' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
+                'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+                'tempat_lahir' => 'required|string|max:100',
+                'tanggal_lahir' => 'required|date',
+                'nomor_ktp' => 'required|string|digits:16',
+                'nomor_whatsapp' => 'required|string|max:15',
+                'penjaminan' => 'required|in:asuransi,cash',
+                'status_keluarga' => 'nullable|string|max:100',
+                'nama_keluarga' => 'nullable|string|max:255',
+                'status_perkawinan' => 'nullable|string|max:50',
+                'suku' => 'nullable|string|max:100',
+                'agama' => 'nullable|string|max:50',
+                'pendidikan_terakhir' => 'nullable|string|max:100',
+                'alamat' => 'nullable|string|max:500',
+                'provinsi' => 'nullable|string|max:100',
+                'kota/kabupaten' => 'nullable|string|max:100',
+                'kecamatan' => 'nullable|string|max:100',
+                'kelurahan' => 'nullable|string|max:100',
+                'nomor_pegawai' => 'nullable|string|max:50',
+
+                'nama_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:100',
+                'nomor_asuransi' => 'required_if:penjaminan,asuransi|nullable|string|max:50',
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -60,6 +86,49 @@ class ReservationController extends Controller
 
         $input = $request->all();
         $user = Auth::user(); 
+
+        if ($isSelf) {
+            $profile = $user->profile;
+            if (!$profile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Profil pengguna tidak ditemukan. Silakan lengkapi profil terlebih dahulu.'
+                ], 400);
+            }
+            if (empty($profile->noKTP) || empty($profile->tanggal_lahir)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor KTP dan tanggal lahir pada profil tidak ditemukan. Silakan lengkapi profil terlebih dahulu.'
+                ], 400);
+            }
+
+            $input['nama'] = $user->name;
+            $input['email'] = $user->email;
+            $input['nomor_whatsapp'] = $profile->nomor_telepon ?? $user->nomor_telepon;
+            $input['jenis_kelamin'] = $profile->jenis_kelamin;
+            $input['tempat_lahir'] = $profile->tempat_lahir ?? '-';
+            $input['tanggal_lahir'] = $profile->tanggal_lahir;
+            $input['nomor_ktp'] = $profile->noKTP;
+            $input['status_keluarga'] = $profile->status_keluarga;
+            $input['nama_keluarga'] = $profile->nama_keluarga;
+            $input['status_perkawinan'] = $profile->status_perkawinan;
+            $input['suku'] = $profile->suku;
+            $input['agama'] = $profile->agama;
+            $input['pendidikan_terakhir'] = $profile->pendidikan_terakhir;
+            $input['alamat'] = $profile->alamat;
+            $input['provinsi'] = $profile->provinsi;
+            $input['kota/kabupaten'] = $profile->{'kota/kabupaten'} ?? null;
+            $input['kecamatan'] = $profile->kecamatan;
+            $input['kelurahan'] = $profile->kelurahan;
+            $input['nomor_pegawai'] = $profile->nomor_pegawai;
+            
+            if (!isset($input['penjaminan'])) {
+                $input['penjaminan'] = $profile->penjaminan ?? 'cash';
+                $input['nama_asuransi'] = $profile->nama_asuransi;
+                $input['nomor_asuransi'] = $profile->nomor_asuransi;
+            }
+        }
+
         $input['booked_user_id'] = $user->userid;
         $input['status'] = 'pending';
 
@@ -105,15 +174,27 @@ class ReservationController extends Controller
 
         $input['rekomendasi_ai'] = $rekomendasiAI;
         $input['sesuai_ai'] = $isMatch ? 1 : 0;
+        try{
+            $reservation = Reservation::create($input);
 
-        $reservation = Reservation::create($input);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Reservasi berhasil dibuat',
-            'data' => $reservation,
-            'ai_suggestion' => $rekomendasiAI 
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservasi berhasil dibuat',
+                'data' => $reservation,
+                'ai_analysis' => [
+                    'suggestion' => $rekomendasiAI,
+                    'is_match' => $isMatch
+                ] 
+            ], 201);
+            
+        } catch (\Exception $e) {
+            Log::error("Gagal membuat reservasi: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat reservasi',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Reservation $reservation)

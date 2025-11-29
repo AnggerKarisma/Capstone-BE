@@ -16,10 +16,25 @@ return new class extends Migration
 
             $table->string('nama');
             $table->string('email');
+            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
             $table->string('tempat_lahir');
             $table->date('tanggal_lahir');
+            $table->string('status_keluarga')->nullable();
+            $table->string('nama_keluarga')->nullable();
+            $table->string('status_perkawinan')->nullable();
+            $table->string('suku')->nullable();
+            $table->string('agama')->nullable();
+            $table->string('pendidikan_terakhir')->nullable();
+            $table->string('alamat')->nullable();
+            $table->string('provinsi')->nullable();
+            $table->string('kota/kabupaten')->nullable();
+            $table->string('kecamatan')->nullable();
+            $table->string('kelurahan')->nullable();
+            $table->string('nomor_pegawai')->nullable();
             $table->string('nomor_whatsapp');
             $table->enum('penjaminan',['asuransi','cash']);
+            $table->string('nama_asuransi')->nullable();
+            $table->string('nomor_asuransi')->nullable();
             $table->string('nomor_ktp', 16);
 
             $table->text('keluhan');
