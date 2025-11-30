@@ -15,6 +15,7 @@ use App\Http\Controllers\RekamMedisController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
 use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\FeedbackController;
 
 
 // Auth Pasien
@@ -48,6 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
+
+    // Feedback
+    Route::post('/feedback', [FeedbackController::class, 'store']);
 });
 
 //Akses admin dan superadmin
@@ -86,6 +90,8 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::post('/antrian/panggil-berikutnya', [AntrianController::class, 'panggilBerikutnya']);
 
     Route::apiResource('rekam-medis', RekamMedisController::class); 
+
+    Route::get('/feedback', [FeedbackController::class, 'index']); 
 });
 
 //Akses khusus superadmin (Perlu token 'admin-api')
