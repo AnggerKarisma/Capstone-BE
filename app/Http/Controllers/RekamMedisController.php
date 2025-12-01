@@ -27,7 +27,8 @@ class RekamMedisController extends Controller
             'resep_obat' => 'nullable|string',
             'tanggal_diperiksa' => 'required|date',
         ], [
-            'reservasi_id.unique' => 'Rekam medis untuk reservasi ini sudah ada.'
+            'reservasi_id.unique' => 'Rekam medis untuk reservasi ini sudah ada.',
+            'reservasi_id.exists' => 'Data reservasi tidak ditemukan.'
         ]);
 
         if ($validator->fails()) {
@@ -37,13 +38,18 @@ class RekamMedisController extends Controller
         try {
             DB::beginTransaction();
 
-            $reservasi = Reservation::find($request->reservasi_id);
+            $reservasi = Reservation::with('antrian')->find($request->reservasi_id);
 
-            // Tidak boleh buat rekam medis jika belum dikonfirmasi
-            if ($reservasi->status !== 'confirmed') {
+            if (!$reservasi->antrian) {
                 return response()->json([
-                    'message' => 'Reservasi belum dikonfirmasi sehingga belum bisa dibuat rekam medis.'
-                ], 409);
+                    'message' => 'Reservasi ini belum masuk dalam antrian (Poli/Admin belum memproses).'
+                ], 404);
+            }
+
+            if ($reservasi->antrian->status !== 'selesai') {
+                return response()->json([
+                    'message' => 'Gagal membuat rekam medis. Status antrian pasien saat ini: ' . $reservasi->antrian->status . '. Harap selesaikan antrian terlebih dahulu.'
+                ], 409); // 409 Conflict
             }
 
             $rekamMedis = RekamMedis::create($validator->validated());
