@@ -8,31 +8,36 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Events\AntrianDipanggil;
+use Illuminate\Http\JsonResponse;
 
 class AntrianController extends Controller
 {
-    public function getAntrianDashboard(Request $request)
+    /** GET dashboard antrian */
+    public function getAntrianDashboard(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'poli_id' => 'required|exists:polis,poli_id',
             'tanggal' => 'required|date',
         ]);
 
-        $poli_id = $request->poli_id;
-        $tanggal = $request->tanggal;
+        $poliId  = $validated['poli_id'];
+        $tanggal = $validated['tanggal'];
 
-        $sedangDipanggil = Antrian::where('poli_id', $poli_id)
+        // 🔥 now return reservation + user
+        $sedangDipanggil = Antrian::with(['reservation.user'])
+            ->where('poli_id', $poliId)
             ->where('tanggal_antrian', $tanggal)
             ->where('status', 'dipanggil')
-            ->orderBy('waktu_panggil', 'desc')
+            ->orderByDesc('waktu_panggil')
             ->first();
 
-        $sisaAntrian = Antrian::where('poli_id', $poli_id)
+        $sisaAntrian = Antrian::where('poli_id', $poliId)
             ->where('tanggal_antrian', $tanggal)
             ->where('status', 'menunggu')
             ->count();
-            
-        $daftarTunggu = Antrian::where('poli_id', $poli_id)
+
+        $daftarTunggu = Antrian::with(['reservation.user'])
+            ->where('poli_id', $poliId)
             ->where('tanggal_antrian', $tanggal)
             ->whereIn('status', ['menunggu', 'dipanggil'])
             ->orderBy('nomor_antrian', 'asc')
@@ -44,64 +49,104 @@ class AntrianController extends Controller
                 'sedang_dipanggil' => $sedangDipanggil,
                 'sisa_antrian' => $sisaAntrian,
                 'daftar_tunggu' => $daftarTunggu,
-                ]
+            ],
         ]);
     }
 
-
-    public function panggilBerikutnya(Request $request)
+    /** POST panggil berikutnya */
+    public function panggilBerikutnya(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'poli_id' => 'required|exists:polis,poli_id',
         ]);
 
-        $poli_id = $request->poli_id;
-        $admin_id = Auth::id(); 
-        $tanggal = Carbon::today();
+        $poliId = $validated['poli_id'];
+        $adminId = Auth::id();
+        $tanggal = Carbon::today()->toDateString();
 
-        return DB::transaction(function () use ($poli_id, $admin_id, $tanggal) {
-            
-            $masihDipanggil = Antrian::where('poli_id', $poli_id)
+        return DB::transaction(function () use ($poliId, $adminId, $tanggal) {
+            $sedangDipanggil = Antrian::where('poli_id', $poliId)
                 ->where('tanggal_antrian', $tanggal)
                 ->where('status', 'dipanggil')
-                ->where('admin_id', $admin_id) 
+                ->where('admin_id', $adminId)
+                ->lockForUpdate()
                 ->first();
 
-            if ($masihDipanggil) {
-                $masihDipanggil->update([
-                    'status' => 'selesai',
+            if ($sedangDipanggil) {
+                $sedangDipanggil->update([
+                    'status'        => 'selesai',
                     'waktu_selesai' => now(),
                 ]);
             }
 
-            $antrianBaru = Antrian::where('poli_id', $poli_id)
+            $antrianBaru = Antrian::with(['reservation.user'])
+                ->where('poli_id', $poliId)
                 ->where('tanggal_antrian', $tanggal)
                 ->where('status', 'menunggu')
                 ->orderBy('nomor_antrian', 'asc')
+                ->lockForUpdate()
                 ->first();
 
             if (!$antrianBaru) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada antrian lagi'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada antrian lagi.',
+                ], 404);
             }
 
             $antrianBaru->update([
-                'status' => 'dipanggil',
+                'status'        => 'dipanggil',
                 'waktu_panggil' => now(),
-                'admin_id' => $admin_id,
+                'admin_id'      => $adminId,
             ]);
 
-            $sisaAntrian = Antrian::where('poli_id', $poli_id)
-                ->where('tanggal_antrian', $tanggal)
-                ->where('status', 'menunggu')
-                ->count();
-            
-            broadcast(new AntrianDipanggil($antrianBaru, $sisaAntrian))->toOthers();
+            broadcast(new AntrianDipanggil(
+                $antrianBaru,
+                Antrian::where('poli_id', $poliId)
+                    ->where('tanggal_antrian', $tanggal)
+                    ->where('status', 'menunggu')
+                    ->count()
+            ))->toOthers();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Antrian ' . $antrianBaru->nomor_antrian . ' dipanggil',
-                'data' => $antrianBaru
+                'message' => 'Antrian ' . $antrianBaru->nomor_antrian . ' dipanggil.',
+                'data' => $antrianBaru,
             ]);
         });
+    }
+
+    /** POST selesaikan panggilan */
+    public function selesaikanPanggilan(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'antrian_id' => 'required|exists:antrians,id',
+        ]);
+
+        $adminId = Auth::id();
+
+        $antrian = Antrian::with(['reservation.user'])
+            ->where('id', $validated['antrian_id'])
+            ->where('status', 'dipanggil')
+            ->where('admin_id', $adminId)
+            ->first();
+
+        if (!$antrian) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Antrian tidak ditemukan atau sudah selesai.',
+            ], 404);
+        }
+
+        $antrian->update([
+            'status'        => 'selesai',
+            'waktu_selesai' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Antrian ' . $antrian->nomor_antrian . ' selesai.',
+            'data' => $antrian,
+        ]);
     }
 }

@@ -3,98 +3,68 @@
 namespace App\Http\Controllers;
 
 use App\Models\RekamMedis;
-use App\Models\Reservation; 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use App\Models\Reservation;
 
 class RekamMedisController extends Controller
 {
     public function index()
     {
-        $rekamMedis = RekamMedis::with('reservasi')->get();
-        return response()->json($rekamMedis);
+        return RekamMedis::with('reservasi.user')
+            ->orderByDesc('tanggal_diperiksa')
+            ->get();
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'reservasi_id' => 'required|integer|exists:reservations,reservid|unique:rekam_medis',
-            'no_medrec' => 'required|string',
-            'gejala' => 'nullable|string',
-            'diagnosis' => 'nullable|string',
-            'tindakan' => 'nullable|string',
-            'resep_obat' => 'nullable|string',
+        $validated = $request->validate([
+            'reservasi_id'      => 'required|exists:reservations,reservid',
+            'no_medrec'         => 'nullable|string|max:50',
+            'gejala'            => 'nullable|string',
+            'diagnosis'         => 'nullable|string',
+            'tindakan'          => 'nullable|string',
+            'resep_obat'        => 'nullable|string',
             'tanggal_diperiksa' => 'required|date',
-        ], [
-            'reservasi_id.unique' => 'Rekam medis untuk reservasi ini sudah ada.'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+        // Otomatis buat No Medrec jika kosong
+        if (empty($validated['no_medrec'])) {
+            $validated['no_medrec'] = 'RM-' . str_pad(RekamMedis::max('rekam_medis_id') + 1, 5, '0', STR_PAD_LEFT);
         }
 
-        try {
-            DB::beginTransaction();
+        $rm = RekamMedis::create($validated);
 
-            $reservasi = Reservation::find($request->reservasi_id);
-
-            // Tidak boleh buat rekam medis jika belum dikonfirmasi
-            if ($reservasi->status !== 'confirmed') {
-                return response()->json([
-                    'message' => 'Reservasi belum dikonfirmasi sehingga belum bisa dibuat rekam medis.'
-                ], 409);
-            }
-
-            $rekamMedis = RekamMedis::create($validator->validated());
-
-            $reservasi->status = 'confirmed';
-            $reservasi->save();
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Rekam medis berhasil disimpan dan reservasi telah diselesaikan.',
-                'data' => $rekamMedis->load('reservasi') 
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Gagal menyimpan rekam medis: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function show(RekamMedis $rekamMedis)
-    {
-        return $rekamMedis->load('reservasi');
+        return response()->json([
+            'success' => true,
+            'message' => 'Rekam medis berhasil ditambahkan.',
+            'data' => $rm,
+        ], 201);
     }
 
     public function update(Request $request, RekamMedis $rekamMedis)
     {
-        $validator = Validator::make($request->all(), [
-            'no_medrec' => 'sometimes|required|string',
-            'gejala' => 'nullable|string',
-            'diagnosis' => 'nullable|string',
-            'tindakan' => 'nullable|string',
-            'resep_obat' => 'nullable|string',
-            'tanggal_diperiksa' => 'sometimes|required|date',
+        $validated = $request->validate([
+            'no_medrec'         => 'nullable|string|max:50',
+            'diagnosis'         => 'nullable|string',
+            'tanggal_diperiksa' => 'nullable|date',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $rekamMedis->update($validator->validated());
+        $rekamMedis->update($validated);
 
         return response()->json([
-            'message' => 'Rekam medis berhasil diupdate.',
-            'data' => $rekamMedis->load('reservasi')
+            'success' => true,
+            'message' => 'Rekam medis berhasil diperbarui.',
+            'data' => $rekamMedis,
         ]);
     }
 
     public function destroy(RekamMedis $rekamMedis)
     {
         $rekamMedis->delete();
-        return response()->json(['message' => 'Rekam medis berhasil dihapus.'], 200);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rekam medis berhasil dihapus.',
+        ]);
     }
 }
