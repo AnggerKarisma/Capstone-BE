@@ -17,136 +17,102 @@ use App\Http\Controllers\PenanggungJawabController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\FeedbackController;
 
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
-Route::post('/register',        [UserAuthController::class, 'register']);
-Route::post('/login-user',      [UserAuthController::class, 'login']);
-Route::post('/otp/verify',      [UserAuthController::class, 'verifyOtp']);
-Route::post('/otp/resend',      [UserAuthController::class, 'resendOtp']);
 
-Route::get('/polis',            [PoliController::class, 'index']);
-Route::get('/jadwal-dokter',    [JadwalDokterController::class, 'index']);
-Route::get('/public/jadwal-dokter/{poli_id}', [JadwalDokterController::class, 'getByPoli']);
+// Auth Pasien
+Route::post('/register', [UserAuthController::class, 'register']);
+Route::post('/login-user', [UserAuthController::class, 'login']);
+Route::post('/otp/verify', [UserAuthController::class, 'verifyOtp']);
+Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
 
-/*
-|--------------------------------------------------------------------------
-| Pasien (guard: sanctum default)
-|--------------------------------------------------------------------------
-*/
+// Auth Admin
+Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
+Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
+
+
+// 'auth:sanctum' akan otomatis menggunakan guard 'api' (pasien)
 Route::middleware('auth:sanctum')->group(function () {
-    // auth pasien
     Route::post('/logout-user', [UserAuthController::class, 'logout']);
-
-    // profil
-    Route::get('/profile',  [ProfileController::class, 'show']);
+    Route::get('/profile', [ProfileController::class, 'show']);
     Route::post('/profile', [ProfileController::class, 'store']);
-
-    // reservasi
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/my-reservations', function (Request $request) {
-        return $request->user()
-            ->reservations()
-            ->with('poli', 'jadwalDokter')
-            ->latest()
-            ->get();
+        return $request->user()->reservations()->with('poli', 'Dokter')->latest()->get(); 
     });
-    Route::get('/reservations/{reservation}',          [ReservationController::class, 'show']);
-    Route::post('/reservations/{reservation}/cancel',  [ReservationController::class, 'cancel']);
-
-    // penanggung jawab
+    Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
+    Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
     Route::post('/penanggung-jawab', [PenanggungJawabController::class, 'store']);
 
-    // chat pasien
-    Route::post('/chat/send',                     [ChatController::class, 'sendMessage']);
-    Route::get('/chat/contacts',                  [ChatController::class, 'getContacts']);
+    // Chat (Pasien)
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/chat/contacts', [ChatController::class, 'getContacts']);
     Route::get('/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
 
-    // antrian dashboard untuk pasien (FE dashboard antrian)
+    // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
 
-    // feedback pasien
+    // Feedback
     Route::post('/feedback', [FeedbackController::class, 'store']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| Admin & Superadmin
-|--------------------------------------------------------------------------
-*/
+//Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {
 
-    Route::post('/login',  [AuthController::class, 'login']);   // login admin
-    Route::post('/logout', [AuthController::class, 'logout']);  // logout admin
+    Route::post('/logout', [AuthController::class, 'logout']); // Logout Admin
 
-    // pasien
-    Route::get('/user', [UserAuthController::class, 'index']);
+    Route::get('/user', [UserAuthController::class, 'index']); // Daftar semua pasien
 
-    // admin
-    Route::get('/admins/{id}', [AdminController::class, 'show']);
-    Route::put('/admins/{id}', [AdminController::class, 'update']);
-
-    // poli
+    Route::get('/admins/{id}', [AdminController::class, 'show']); 
+    Route::put('/admins/{id}', [AdminController::class, 'update']); 
+    Route::get('/polis', [PoliController::class, 'index']);
     Route::get('/polis/{poli_id}', [PoliController::class, 'show']);
-
-    // penanggung jawab
-    Route::get('/penanggung-jawabs',                 [PenanggungJawabController::class, 'index']);
+    
+    // Manajemen PJ
+    Route::get('/penanggung-jawabs', [PenanggungJawabController::class, 'index']);
     Route::get('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'show']);
     Route::put('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'update']);
     Route::delete('/penanggung-jawabs/{penanggungJawab}', [PenanggungJawabController::class, 'destroy']);
-
-    // reservasi
-    Route::get('/reservations', [ReservationController::class, 'index']);
+    
+    // Manajemen Reservasi
+    Route::get('/reservations', [ReservationController::class, 'index']); // Typo sudah diperbaiki
     Route::post('/reservations/{reservation}/verify', [ReservationController::class, 'verify']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
-
-    // chat admin
-    Route::post('/admin/chat/send',                     [ChatController::class, 'sendMessage']);
-    Route::get('/admin/chat/contacts',                  [ChatController::class, 'getContacts']);
+    
+    // Chat (Admin)
+    Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);
+    Route::get('/admin/chat/contacts', [ChatController::class, 'getContacts']);
     Route::get('/admin/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
+    
+    // Jadwal Dokter (Rute duplikat dihapus)
+    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
+    Route::put('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'update']);
 
-    // antrian (admin)
+    // Antrian (Admin)
     Route::post('/antrian/panggil-berikutnya', [AntrianController::class, 'panggilBerikutnya']);
-    Route::post('/antrian/selesaikan',         [AntrianController::class, 'selesaikanPanggilan']);
 
-    // rekam medis
-    Route::apiResource('rekam-medis', RekamMedisController::class);
+    Route::apiResource('rekam-medis', RekamMedisController::class); 
 
-    // feedback
-    Route::get('/feedback', [FeedbackController::class, 'index']);
+    Route::get('/feedback', [FeedbackController::class, 'index']); 
 });
 
-/*
-|--------------------------------------------------------------------------
-| Superadmin Only
-|--------------------------------------------------------------------------
-*/
+//Akses khusus superadmin (Perlu token 'admin-api')
 Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
+    Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
+    
+    Route::post('/polis', [PoliController::class, 'store']);
+    Route::put('/polis/{poli_id}', [PoliController::class, 'update']);
+    Route::delete('/polis/{poli_id}', [PoliController::class, 'destroy']);
 
-    Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
-
-    // poli manage
-    Route::post('/polis',              [PoliController::class, 'store']);
-    Route::put('/polis/{poli_id}',     [PoliController::class, 'update']);
-    Route::delete('/polis/{poli_id}',  [PoliController::class, 'destroy']);
-
-    // dokter
     Route::apiResource('dokters', DokterController::class);
 
-    // jadwal dokter
-    Route::post('/jadwal-dokter',                      [JadwalDokterController::class, 'store']);
-    Route::get('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'show']);
-    Route::put('/jadwal-dokter/{dokter_id/{poli_id}',  [JadwalDokterController::class, 'update']);
+    Route::post('/jadwal-dokter', [JadwalDokterController::class, 'store']);
     Route::delete('/jadwal-dokter/{dokter_id}/{poli_id}', [JadwalDokterController::class, 'destroy']);
+    
+    Route::get('/admins', [AdminController::class, 'index']);      
+    Route::post('/admins', [AdminController::class, 'store']);    
+    Route::delete('/admins/{id}', [AdminController::class, 'destroy']); 
 
-    // user management
-    Route::get('/admins', [AdminController::class, 'index']);
-    Route::post('/admins', [AdminController::class, 'store']);
-
-    Route::get('/users',        [UserController::class, 'index']);
-    Route::get('/users/{id}',   [UserController::class, 'show']);
-    Route::put('/users/{id}',   [UserController::class, 'update']);
-    Route::delete('/users/{id}',[UserController::class, 'destroy']);
+    Route::get('/users', [UserController::class, 'index']);        
+    Route::get('/users/{id}', [UserController::class, 'show']);    
+    Route::put('/users/{id}', [UserController::class, 'update']);  
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
