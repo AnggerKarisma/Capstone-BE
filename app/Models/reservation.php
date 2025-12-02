@@ -86,4 +86,14 @@ class reservation extends Model
     {
         return Carbon::parse($value)->translatedFormat('l, d F Y H:i:s');
     }
+
+    public function antrian()
+    {
+        return $this->hasOne(Antrian::class, 'reservation_id', 'reservid');
+    }
+
+    public function rekamMedis()
+    {
+        return $this->hasOne(RekamMedis::class, 'reservasi_id', 'reservid');
+    }
 }
