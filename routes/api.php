@@ -28,7 +28,6 @@ Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
 Route::get('/jadwal-dokter', [JadwalDokterController::class, 'index']);
 
-
 // 'auth:sanctum' akan otomatis menggunakan guard 'api' (pasien)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout-user', [UserAuthController::class, 'logout']);
@@ -50,6 +49,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
 
+    //Recomendations
+    Route::post('/reservations/check-poli', [ReservationController::class, 'getRecommendation']);
     // Feedback
     Route::post('/feedback', [FeedbackController::class, 'store']);
 });
@@ -117,3 +118,5 @@ Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update']);  
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
+
+

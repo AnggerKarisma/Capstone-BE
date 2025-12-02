@@ -228,6 +228,92 @@ class ReservationController extends Controller
         }
     }
 
+    public function getRecommendation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'keluhan' => 'required|string|max:1000',
+            'is_self' => 'boolean', 
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Keluhan wajib diisi',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = Auth::user();
+        $isSelf = $request->has('is_self') ? $request->boolean('is_self') : true;
+        $usia = 30; 
+        $jk = 'L';
+        $riwayat = ''; 
+
+        if ($isSelf) {
+            if ($user->profile) {
+                if ($user->profile->tanggal_lahir) {
+                    $usia = Carbon::parse($user->profile->tanggal_lahir)->age;
+                }
+                if ($user->profile->jenis_kelamin) {
+                    $jk = ($user->profile->jenis_kelamin == 'Perempuan') ? 'P' : 'L';
+                }
+            }
+        } else {
+            if ($request->filled('tanggal_lahir')) {
+                $usia = Carbon::parse($request->tanggal_lahir)->age;
+            }
+            if ($request->filled('jenis_kelamin')) {
+                $jk = ($request->jenis_kelamin == 'Perempuan') ? 'P' : 'L';
+            }
+            if ($request->filled('riwayat_penyakit')) {
+                $riwayat = $request->riwayat_penyakit;
+            }
+        }
+
+        try {
+            $payload = [
+                'keluhan' => $request->keluhan,
+                'usia' => (int) $usia,        
+                'jenis_kelamin' => $jk,      
+                'riwayat_penyakit' => $riwayat 
+            ];
+
+            Log::info('Sending to ML:', $payload);
+
+            $response = Http::timeout(5)->post('http://127.0.0.1:5000/predict', $payload);
+
+            if ($response->successful()) {
+                $mlResult = $response->json();
+                $rekomendasiAI = $mlResult['rekomendasi_poli'] ?? null;
+                $confidence = $mlResult['confidence'] ?? 0;
+                $poliFound = Poli::where('poli_name', 'LIKE', "%{$rekomendasiAI}%")->first();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rekomendasi berhasil didapatkan',
+                    'data' => [
+                        'rekomendasi_nama' => $rekomendasiAI, 
+                        'rekomendasi_poli_id' => $poliFound ? $poliFound->poli_id : null,
+                        'confidence' => $confidence,
+                        'analisis' => $rekomendasiAI 
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'AI Service tidak merespon'
+                ], 502);
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Gagal koneksi ke ML (Check): " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghubungi layanan AI'
+            ], 500);
+        }
+    }
+
     public function show(Reservation $reservation)
     {
         $this->authorize('view', $reservation);
