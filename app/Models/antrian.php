@@ -31,7 +31,9 @@ class Antrian extends Model
 
     public function reservation()
     {
-        return $this->belongsTo(Reservation::class, 'reservation_id', 'reservid');
+        // ⬅️ Penting: ikut load user
+        return $this->belongsTo(Reservation::class, 'reservation_id', 'reservid')
+                    ->with('user');
     }
 
     public function poli()
