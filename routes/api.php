@@ -88,6 +88,7 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
 
     // Antrian (Admin)
     Route::post('/antrian/panggil-berikutnya', [AntrianController::class, 'panggilBerikutnya']);
+    Route::post('/antrian/selesai-dipanggil', [AntrianController::class, 'selesaikanPanggilan']);
 
     Route::apiResource('rekam-medis', RekamMedisController::class); 
 

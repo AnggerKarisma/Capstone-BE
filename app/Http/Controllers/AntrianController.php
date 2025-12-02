@@ -120,13 +120,13 @@ class AntrianController extends Controller
     public function selesaikanPanggilan(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'antrian_id' => 'required|exists:antrians,id',
+            'nomor_antrian' => 'required|exists:antrians,nomor_antrian',
         ]);
 
         $adminId = Auth::id();
 
         $antrian = Antrian::with(['reservation.user'])
-            ->where('id', $validated['antrian_id'])
+            ->where('nomor_antrian', $validated['nomor_antrian'])
             ->where('status', 'dipanggil')
             ->where('admin_id', $adminId)
             ->first();
