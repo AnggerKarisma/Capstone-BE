@@ -36,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'store']);
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/my-reservations', function (Request $request) {
-        return $request->user()->reservations()->with('poli', 'jadwalDokter')->latest()->get(); 
+        return $request->user()->reservations()->with('poli', 'Dokter')->latest()->get(); 
     });
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
@@ -75,7 +75,6 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     // Manajemen Reservasi
     Route::get('/reservations', [ReservationController::class, 'index']); // Typo sudah diperbaiki
     Route::post('/reservations/{reservation}/verify', [ReservationController::class, 'verify']);
-    Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
     
     // Chat (Admin)
     Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);

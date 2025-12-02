@@ -42,7 +42,7 @@ class ReservationController extends Controller
             'tanggal_reservasi' => 'required|date|after_or_equal:today',
             'keluhan' => 'required|string|max:1000',
             'is_self' => 'required|boolean',
-            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,id',
+            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawabs,PjId',
         ];
         
         $isSelf = $request->boolean('is_self');
