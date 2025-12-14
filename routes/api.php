@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::get('/chat/contacts', [ChatController::class, 'getContacts']);
     Route::get('/chat/{receiverType}/{receiverId}', [ChatController::class, 'getConversation']);
+    
 
     // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);

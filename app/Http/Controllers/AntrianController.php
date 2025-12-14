@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Antrian;
+use App\Models\Poli;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,14 +17,41 @@ class AntrianController extends Controller
     public function getAntrianDashboard(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'poli_id' => 'required|exists:polis,poli_id',
+            'poli_id' => 'nullable|exists:polis,poli_id',
             'tanggal' => 'required|date',
         ]);
 
-        $poliId  = $validated['poli_id'];
-        $tanggal = $validated['tanggal'];
+       $tanggal = $validated['tanggal'];
+       
+       if ($request->has('poli_id') && $request->poli_id != null){
+            $poliId = $request->poli_id;
+            $data = $this->getAntrianByPoli($poliId, $tanggal);
 
-        // 🔥 now return reservation + user
+            return response()->json([
+                'success' => true,
+                'mode' => 'single',
+                'data' => $data,
+            ]);
+       } 
+
+       $allPolis = Poli::all();
+       $dashboardData = $allPolis->map(function($poli) use ($tanggal){
+            $antrianData = $this->getAntrianByPoli($poli->poli_id,$tanggal);
+            return array_merge([
+                'poli_id' => $poli->poli_id,
+                'poli_name' => $poli->poli_name,
+            ], $antrianData);
+        });
+
+        return response()->json([
+                'success' => true,
+                'mode' => 'all',
+                'data' => $dashboardData,
+        ]);
+    }
+
+    private function getAntrianByPoli($poliId, $tanggal)
+    {
         $sedangDipanggil = Antrian::with(['reservation.user'])
             ->where('poli_id', $poliId)
             ->where('tanggal_antrian', $tanggal)
@@ -39,19 +67,17 @@ class AntrianController extends Controller
         $daftarTunggu = Antrian::with(['reservation.user'])
             ->where('poli_id', $poliId)
             ->where('tanggal_antrian', $tanggal)
-            ->whereIn('status', ['menunggu', 'dipanggil'])
+            ->where('status', ['menunggu','dipanggil'])
             ->orderBy('nomor_antrian', 'asc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'sedang_dipanggil' => $sedangDipanggil,
-                'sisa_antrian' => $sisaAntrian,
-                'daftar_tunggu' => $daftarTunggu,
-            ],
-        ]);
+        return [
+            'sedang_dipanggil' => $sedangDipanggil,
+            'sisa_antrian' => $sisaAntrian,
+            'daftar_tunggu' => $daftarTunggu,
+        ];
     }
+
 
     /** POST panggil berikutnya */
     public function panggilBerikutnya(Request $request): JsonResponse
