@@ -16,6 +16,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PenanggungJawabController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\NotificationController;
 
 
 // Auth Pasien
@@ -23,6 +24,7 @@ Route::post('/register', [UserAuthController::class, 'register']);
 Route::post('/login-user', [UserAuthController::class, 'login']);
 Route::post('/otp/verify', [UserAuthController::class, 'verifyOtp']);
 Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
+
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
@@ -54,7 +56,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reservations/check-poli', [ReservationController::class, 'getRecommendation']);
     // Feedback
     Route::post('/feedback', [FeedbackController::class, 'store']);
-});
+    //notification
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all',[NotificationController::class, 'markAllRead']);
+}); 
 
 //Akses admin dan superadmin
 Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () {

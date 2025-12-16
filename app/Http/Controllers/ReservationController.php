@@ -9,6 +9,7 @@ use App\Models\PenanggungJawab;
 use App\Models\Antrian;
 use App\Models\Dokter;
 use App\Models\User;
+use App\Notifications\ReservationStatusUpdated;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -329,6 +330,7 @@ class ReservationController extends Controller
     public function verify(Request $request, Reservation $reservation)
     {
         $this->authorize('verify', $reservation);
+        
 
         if ($reservation->status !== 'pending') {
             return response()->json([
@@ -336,8 +338,6 @@ class ReservationController extends Controller
                 'message' => 'Reservasi sudah diverifikasi atau dibatalkan',
             ], 409);
         }
-
-        // ✅ Validasi pakai data dari model, bukan dari body request
         $dataToValidate = [
             'poli_id'           => $reservation->poli_id,
             'dokter_id'         => $reservation->dokter_id,
@@ -395,6 +395,11 @@ class ReservationController extends Controller
                     'tanggal_antrian'=> $tanggalReservasi,
                     'status'         => 'menunggu',
                 ]);
+                
+                $user = $reservation->user;
+                if ($user) {
+                    $user->notify(new ReservationStatusUpdated($reservation));
+                }
 
                 return response()->json([
                     'success' => true,
@@ -404,6 +409,10 @@ class ReservationController extends Controller
             });
         } catch (\Exception $e) {
             Log::error('Gagal memproses verifikasi: ' . $e->getMessage());
+
+            if ($user) {
+                $user->notify(new ReservationStatusUpdated($reservation));
+            }
 
             return response()->json([
                 'success' => false,
