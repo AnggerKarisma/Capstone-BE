@@ -39,7 +39,7 @@ return new class extends Migration
 
             $table->text('keluhan');
 
-            $table->string('rekomendasi_ai')->nullable(); 
+            $table->json('rekomendasi_ai')->nullable();
             $table->boolean('sesuai_ai')->default(0)->nullable();
 
             $table->string('poli_id',10)->nullable();

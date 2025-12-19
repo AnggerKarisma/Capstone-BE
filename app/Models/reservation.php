@@ -41,6 +41,8 @@ class reservation extends Model
         'nomor_asuransi',
         'keluhan',
         'status',
+        'rekomendasi_ai', 
+        'sesuai_ai',
         'poli_id',
         'dokter_id',
         'nomor_antrian',
@@ -50,6 +52,7 @@ class reservation extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tanggal_reservasi' => 'date',
+        'rekomendasi_ai' => 'array',
     ];
 
     public function user()

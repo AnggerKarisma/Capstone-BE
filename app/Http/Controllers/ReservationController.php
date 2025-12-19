@@ -163,7 +163,7 @@ class ReservationController extends Controller
         }
 
         // ---------- PANGGIL ML & REKOMENDASI ----------
-        $rekomendasiAI = null;
+        $rekomendasiAI = [];
         $isMatch       = false;
 
         try {
@@ -189,13 +189,18 @@ class ReservationController extends Controller
                 $rekomendasiAI = $mlResult['rekomendasi_poli'] ?? null;
 
                 $poliUser = Poli::find($request->poli_id);
-                if ($poliUser && $rekomendasiAI) {
-                    $namaPoliUser = strtoupper($poliUser->poli_name);
-                    $namaPoliAI   = strtoupper($rekomendasiAI);
 
-                    if (str_contains($namaPoliUser, $namaPoliAI) ||
-                        str_contains($namaPoliAI, $namaPoliUser)) {
-                        $isMatch = true;
+                if ($poliUser && !empty($rekomendasiAI)) {
+                    $namaPoliUser = strtoupper($poliUser->poli_name); 
+                    foreach($rekomendasiAI as $saran) {
+                        $saran = strtoupper($saran); 
+                        $coreUser = trim(str_replace(['KLINIK', 'POLI'], '', $namaPoliUser));
+                        $coreAI   = trim(str_replace(['KLINIK', 'POLI'], '', $saran));
+
+                        if (str_contains($coreUser, $coreAI) || str_contains($coreAI, $coreUser)) {
+                            $isMatch = true;
+                            break; 
+                        }
                     }
                 }
             }
@@ -203,6 +208,17 @@ class ReservationController extends Controller
             Log::error("Gagal koneksi ke ML: " . $e->getMessage());
         }
 
+        if (!$isMatch && !empty($rekomendasiAI)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda hanya dapat memilih poli yang direkomendasikan oleh sistem (Top 3).',
+                'data' => [
+                    'pilihan_anda' => $poliUser->poli_name ?? '-',
+                    'seharusnya' => $rekomendasiAI
+                ]
+            ], 422); // 422 Unprocessable Entity
+        }
+        
         $input['rekomendasi_ai'] = $rekomendasiAI;
         $input['sesuai_ai']      = $isMatch ? 1 : 0;
 
@@ -238,8 +254,8 @@ class ReservationController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Keluhan wajib diisi',
+                'success' => false, 
+                'message' => 'Data tidak lengkap', 
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -281,37 +297,47 @@ class ReservationController extends Controller
 
             Log::info('Sending to ML:', $payload);
 
-            $response = Http::timeout(5)->post('http://127.0.0.1:5000/predict', $payload);
+            $response = Http::timeout(10)->post('http://127.0.0.1:5000/predict', $payload);
 
             if ($response->successful()) {
                 $mlResult = $response->json();
-                $rekomendasiAI = $mlResult['rekomendasi_poli'] ?? null;
-                $confidence = $mlResult['confidence'] ?? 0;
-                $poliFound = Poli::where('poli_name', 'LIKE', "%{$rekomendasiAI}%")->first();
+
+                $rekomendasiList = $mlResult['rekomendasi_poli'] ?? []; 
+                $confidence = $mlResult['confidence_score'] ?? 0;
+
+                $poliOptions = [];
+
+                foreach ($rekomendasiList as $namaPoliAI) {
+                    $keyword = trim(str_replace(['POLI', 'KLINIK'], '', strtoupper($namaPoliAI)));
+
+                    $poliDb = Poli::where('poli_name', 'LIKE', '%' . $keyword . '%')->first();
+
+                    if ($poliDb) {
+                        $poliOptions[] = [
+                            'poli_id' => $poliDb->poli_id,
+                            'poli_name' => $poliDb->poli_name,
+                            'source' => 'AI Recommendation'
+                        ];
+                    }
+                }
 
                 return response()->json([
                     'success' => true,
                     'message' => 'Rekomendasi berhasil didapatkan',
                     'data' => [
-                        'rekomendasi_nama' => $rekomendasiAI, 
-                        'rekomendasi_poli_id' => $poliFound ? $poliFound->poli_id : null,
+                        'rekomendasi_list' => $poliOptions, // List poli (Max 3) untuk ditampilkan di Frontend
                         'confidence' => $confidence,
-                        'analisis' => $rekomendasiAI 
+                        'analisis' => $rekomendasiList[0] ?? '-' // Top 1 prediction text
                     ]
                 ]);
+
             } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'AI Service tidak merespon'
-                ], 502);
+                return response()->json(['success' => false, 'message' => 'AI Service Error'], 502);
             }
 
         } catch (\Exception $e) {
-            Log::error("Gagal koneksi ke ML (Check): " . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghubungi layanan AI'
-            ], 500);
+            Log::error("ML Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal menghubungi AI'], 500);
         }
     }
 
