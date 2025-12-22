@@ -78,8 +78,6 @@ class AntrianController extends Controller
         ];
     }
 
-
-    /** POST panggil berikutnya */
     public function panggilBerikutnya(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -142,7 +140,6 @@ class AntrianController extends Controller
         });
     }
 
-    /** POST selesaikan panggilan */
     public function selesaikanPanggilan(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -172,6 +169,65 @@ class AntrianController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Antrian ' . $antrian->nomor_antrian . ' selesai.',
+            'data' => $antrian,
+        ]);
+    }
+
+    public function tandaiTerlewat(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'antrian_id' => 'required|exists:antrians,id',
+        ]);
+
+        $antrian = Antrian::find($validated['antrian_id']);
+
+        if (!$antrian || !in_array($antrian->status, ['menunggu', 'dipanggil'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Antrian tidak valid untuk dilewati.',
+            ], 400);
+        }
+
+        $antrian->update([
+            'status' => 'terlewat',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Antrian ' . $antrian->nomor_antrian . ' ditandai terlewat.',
+            'data' => $antrian,
+        ]);
+    }
+
+    public function batalkanAntrian(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'antrian_id' => 'required|exists:antrians,id',
+            'alasan'     => 'nullable|string'
+        ]);
+
+        $antrian = Antrian::find($validated['antrian_id']);
+
+        if (!$antrian) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Antrian tidak ditemukan.',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($antrian) {
+            $antrian->update([
+                'status' => 'batal'
+            ]);
+            
+            if ($antrian->reservation) {
+                $antrian->reservation->update(['status' => 'cancelled']);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Antrian ' . $antrian->nomor_antrian . ' berhasil dibatalkan.',
             'data' => $antrian,
         ]);
     }
