@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'role:superadmin,admin'])->group(function () 
     Route::get('/reservations', [ReservationController::class, 'index']); // Typo sudah diperbaiki
     Route::post('/reservations/{reservation}/verify', [ReservationController::class, 'verify']);
     Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
+    Route::put('/reservations/{reservation}', [ReservationController::class, 'update']);
     
     // Chat (Admin)
     Route::post('/admin/chat/send', [ChatController::class, 'sendMessage']);

@@ -467,4 +467,71 @@ class ReservationController extends Controller
             'data'    => $reservation,
         ]);
     }
+
+    public function update(Request $request, Reservation $reservation)
+    {
+        
+        $validator = Validator::make($request->all(), [
+            'poli_id'           => 'nullable|exists:polis,poli_id',
+            'dokter_id'         => 'nullable|exists:dokters,dokter_id',
+            'tanggal_reservasi' => 'nullable|date|after_or_equal:today',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            return DB::transaction(function () use ($request, $reservation) {
+        
+                $oldPoli = $reservation->poli_id;
+                $newPoli = $request->poli_id ?? $oldPoli;
+                $reservation->update([
+                    'poli_id'           => $newPoli,
+                    'dokter_id'         => $request->dokter_id ?? $reservation->dokter_id,
+                    'tanggal_reservasi' => $request->tanggal_reservasi ?? $reservation->tanggal_reservasi,
+                ]);
+
+                if ($reservation->status === 'confirmed') {
+                    $antrian = Antrian::where('reservation_id', $reservation->reservid)->first();
+                    
+                    if ($antrian) {
+                        if ($oldPoli !== $newPoli) {
+                            $poli = Poli::findOrFail($newPoli);
+                            $kodePoli = $poli->poli_id;
+                            $dateStr = str_replace('-', '', $reservation->tanggal_reservasi);
+                            $oldNumberSequence = substr($antrian->nomor_antrian, -3); 
+                            
+                            $newNomorAntrian = sprintf("%s-%s-%s", $kodePoli, $dateStr, $oldNumberSequence);
+                            
+                            $antrian->update([
+                                'poli_id'       => $newPoli,
+                                'dokter_id'     => $request->dokter_id ?? $antrian->dokter_id,
+                                'nomor_antrian' => $newNomorAntrian,
+                                'tanggal_antrian' => $reservation->tanggal_reservasi
+                            ]);
+                            $reservation->update(['nomor_antrian' => $newNomorAntrian]);
+                        } else {
+                            $antrian->update([
+                                'dokter_id'       => $request->dokter_id ?? $antrian->dokter_id,
+                                'tanggal_antrian' => $reservation->tanggal_reservasi
+                            ]);
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data reservasi berhasil diperbarui',
+                    'data'    => $reservation
+                ]);
+            });
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update reservasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
