@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 
 class AntrianController extends Controller
 {
-    /** GET dashboard antrian */
     public function getAntrianDashboard(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -21,9 +20,9 @@ class AntrianController extends Controller
             'tanggal' => 'required|date',
         ]);
 
-       $tanggal = $validated['tanggal'];
-       
-       if ($request->has('poli_id') && $request->poli_id != null){
+        $tanggal = $validated['tanggal'];
+        
+        if ($request->has('poli_id') && $request->poli_id != null){
             $poliId = $request->poli_id;
             $data = $this->getAntrianByPoli($poliId, $tanggal);
 
@@ -32,21 +31,23 @@ class AntrianController extends Controller
                 'mode' => 'single',
                 'data' => $data,
             ]);
-       } 
+        } 
 
-       $allPolis = Poli::all();
-       $dashboardData = $allPolis->map(function($poli) use ($tanggal){
-            $antrianData = $this->getAntrianByPoli($poli->poli_id,$tanggal);
+        $allPolis = Poli::all();
+        
+        $dashboardData = $allPolis->map(function($poli) use ($tanggal){
+            $antrianData = $this->getAntrianByPoli($poli->poli_id, $tanggal);
+            
             return array_merge([
-                'poli_id' => $poli->poli_id,
-                'poli_name' => $poli->poli_name,
+                'poli_id'   => $poli->poli_id,
+                'nama_poli' => $poli->poli_name, 
             ], $antrianData);
         });
 
         return response()->json([
-                'success' => true,
-                'mode' => 'all',
-                'data' => $dashboardData,
+            'success' => true,
+            'mode' => 'all',
+            'data' => $dashboardData,
         ]);
     }
 
@@ -71,10 +72,18 @@ class AntrianController extends Controller
             ->orderBy('nomor_antrian', 'asc')
             ->get();
 
+        $sudahSelesai = Antrian::with(['reservation.user'])
+            ->where('poli_id', $poliId)
+            ->where('tanggal_antrian', $tanggal)
+            ->where('status', 'selesai')
+            ->orderByDesc('waktu_selesai')
+            ->get();
+
         return [
             'sedang_dipanggil' => $sedangDipanggil,
             'sisa_antrian' => $sisaAntrian,
             'daftar_tunggu' => $daftarTunggu,
+            'sudah_selesai' => $sudahSelesai,
         ];
     }
 
