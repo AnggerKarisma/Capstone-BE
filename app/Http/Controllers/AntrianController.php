@@ -111,6 +111,11 @@ class AntrianController extends Controller
                     'waktu_selesai' => now(),
                 ]);
             }
+            if ($sedangDipanggil->reservation) {
+                $sedangDipanggil->reservation->update([
+                    'status' => 'completed'
+                ]);
+            }
 
             $antrianBaru = Antrian::with(['reservation.user'])
                 ->where('poli_id', $poliId)
@@ -174,6 +179,12 @@ class AntrianController extends Controller
             'status'        => 'selesai',
             'waktu_selesai' => now(),
         ]);
+
+        if($antrian->reservation){
+            $antrian->reservation->update([
+                'status' => 'completed'
+            ]);
+        }
 
         return response()->json([
             'success' => true,
