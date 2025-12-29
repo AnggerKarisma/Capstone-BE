@@ -194,7 +194,8 @@ class JadwalDokterController extends Controller
     public function update(Request $request, $dokter_id, $poli_id)
     {
         try {
-            $jadwal = $this->queryByDokterPoli($dokter_id, $poli_id)->first();
+            $query = $this->queryByDokterPoli($dokter_id, $poli_id);
+            $jadwal = $query->first();
 
             if (!$jadwal) {
                 return response()->json([
@@ -208,27 +209,20 @@ class JadwalDokterController extends Controller
             $data['poli_id']   = $poli_id;
             $data = $this->applyAuditFields($data);
 
-            $this->queryByDokterPoli($dokter_id, $poli_id)->update($data);
+            $query->update($data);
 
-            $jadwal->refresh();
+            $updatedData = $this->queryByDokterPoli($dokter_id, $poli_id)->first();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Jadwal dokter berhasil diperbarui',
-                'data'    => $jadwal,
+                'data'    => $updatedData,
             ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors'  => $e->errors(),
-            ], 422);
         } catch (Exception $e) {
             Log::error('Error updating jadwal: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat update jadwal',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
         }
     }
