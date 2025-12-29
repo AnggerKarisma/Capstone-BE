@@ -20,9 +20,9 @@ class AdminController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:admins',
-            'password' => 'required|string|min:8',
+            'Nama' => 'required|string|max:255',
+            'Email' => 'required|string|email|max:255|unique:admins',
+            'Password' => 'required|string|min:8',
             'role' => 'required|in:superadmin,admin',
             'poli_id' => 'nullable|exists:polis,poli_id', 
         ]);
@@ -32,9 +32,9 @@ class AdminController extends Controller
         }
 
         $admin = Admin::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'Nama' => $request->Nama,
+            'Email' => $request->Email,
+            'Password' => bcrypt($request->Password),
             'role' => $request->role,
             'poli_id' => $request->poli_id, 
         ]);
