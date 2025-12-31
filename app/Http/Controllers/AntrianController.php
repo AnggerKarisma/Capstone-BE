@@ -7,6 +7,7 @@ use App\Models\Poli;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Events\AntrianDipanggil;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +49,158 @@ class AntrianController extends Controller
             'success' => true,
             'mode' => 'all',
             'data' => $dashboardData,
+        ]);
+    }
+
+    public function getMyQueues(Request $request): JsonResponse
+    {
+        // Use $request->user() instead of Auth::user() - more reliable with Sanctum
+        $user = $request->user();
+        
+        if (!$user) {
+            \Log::channel('single')->error('❌ USER NOT AUTHENTICATED');
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+
+        // User model uses 'userid' as primary key, not 'id'
+        $userId = $user->userid;
+        
+        \Log::channel('single')->info('🔍 MY QUEUES CALLED', [
+            'user_id' => $userId,
+            'user_type' => get_class($user)
+        ]);
+        
+        $validated = $request->validate([
+            'tanggal' => 'nullable|date',
+        ]);
+
+        $tanggal = $validated['tanggal'] ?? Carbon::today()->toDateString();
+
+        \Log::channel('single')->info('📅 Querying antrians', [
+            'user_id' => $userId,
+            'tanggal' => $tanggal
+        ]);
+
+        // Ambil antrian user berdasarkan reservation mereka
+        $myQueues = Antrian::with(['poli', 'dokter', 'reservation'])
+            ->whereHas('reservation', function($query) use ($userId) {
+                $query->where('booked_user_id', $userId);
+            })
+            ->where('tanggal_antrian', $tanggal)
+            ->whereIn('status', ['menunggu', 'dipanggil'])
+            ->orderBy('nomor_antrian', 'asc')
+            ->get()
+            ->map(function($antrian) use ($tanggal) {
+                // Hitung posisi antrian
+                $daftarTunggu = Antrian::where('poli_id', $antrian->poli_id)
+                    ->where('tanggal_antrian', $tanggal)
+                    ->whereIn('status', ['menunggu', 'dipanggil'])
+                    ->orderBy('nomor_antrian', 'asc')
+                    ->get();
+
+                $position = $daftarTunggu->search(function($item) use ($antrian) {
+                    return $item->id === $antrian->id;
+                }) + 1;
+
+                // Ambil nomor yang sedang dipanggil
+                $sedangDipanggil = Antrian::where('poli_id', $antrian->poli_id)
+                    ->where('tanggal_antrian', $tanggal)
+                    ->where('status', 'dipanggil')
+                    ->orderByDesc('waktu_panggil')
+                    ->first();
+
+                // Hitung estimasi waktu tunggu (10 menit per pasien)
+                $patientsAhead = $position - 1;
+                $estimatedMinutes = $patientsAhead * 10;
+
+                // Extract nomor antrian yang bersih (ambil 3 digit terakhir)
+                $cleanNomor = substr($antrian->nomor_antrian, -3);
+                
+                return [
+                    'antrian_id' => $antrian->id,
+                    'nomor_antrian' => $cleanNomor,
+                    'nomor_antrian_full' => $antrian->nomor_antrian,
+                    'status' => $antrian->status,
+                    'poli_id' => $antrian->poli_id,
+                    'poli_name' => $antrian->poli->poli_name ?? 'N/A',
+                    'dokter_name' => $antrian->dokter->nama_dokter ?? 'Belum ditentukan',
+                    'tanggal_antrian' => $antrian->tanggal_antrian,
+                    'posisi_antrian' => $position,
+                    'total_antrian' => $daftarTunggu->count(),
+                    'nomor_sekarang' => $sedangDipanggil ? substr($sedangDipanggil->nomor_antrian, -3) : null,
+                    'estimasi_waktu_menit' => $estimatedMinutes,
+                ];
+            });
+
+        // Jika tidak ada antrian hari ini, cari antrian terbaru user
+        if ($myQueues->isEmpty()) {
+            Log::info('⚠️ No queues found for date, using fallback', ['tanggal' => $tanggal]);
+            
+            $latestQueue = Antrian::with(['poli', 'dokter', 'reservation'])
+                ->whereHas('reservation', function($query) use ($userId) {
+                    $query->where('booked_user_id', $userId);
+                })
+                ->whereIn('status', ['menunggu', 'dipanggil'])
+                ->orderByDesc('tanggal_antrian')
+                ->orderBy('nomor_antrian', 'asc')
+                ->first();
+            
+            Log::info('🔍 Fallback result', [
+                'found' => $latestQueue ? 'yes' : 'no',
+                'tanggal_antrian' => $latestQueue?->tanggal_antrian
+            ]);
+
+            if ($latestQueue) {
+                $latestDate = $latestQueue->tanggal_antrian;
+                
+                // Hitung posisi untuk tanggal antrian terbaru
+                $daftarTunggu = Antrian::where('poli_id', $latestQueue->poli_id)
+                    ->where('tanggal_antrian', $latestDate)
+                    ->whereIn('status', ['menunggu', 'dipanggil'])
+                    ->orderBy('nomor_antrian', 'asc')
+                    ->get();
+
+                $position = $daftarTunggu->search(function($item) use ($latestQueue) {
+                    return $item->id === $latestQueue->id;
+                }) + 1;
+
+                $sedangDipanggil = Antrian::where('poli_id', $latestQueue->poli_id)
+                    ->where('tanggal_antrian', $latestDate)
+                    ->where('status', 'dipanggil')
+                    ->orderByDesc('waktu_panggil')
+                    ->first();
+
+                $patientsAhead = $position - 1;
+                $estimatedMinutes = $patientsAhead * 10;
+
+                // Extract clean nomor antrian
+                $cleanNomor = substr($latestQueue->nomor_antrian, -3);
+                
+                $myQueues = collect([[
+                    'antrian_id' => $latestQueue->id,
+                    'nomor_antrian' => $cleanNomor,
+                    'nomor_antrian_full' => $latestQueue->nomor_antrian,
+                    'status' => $latestQueue->status,
+                    'poli_id' => $latestQueue->poli_id,
+                    'poli_name' => $latestQueue->poli->poli_name ?? 'N/A',
+                    'dokter_name' => $latestQueue->dokter->nama_dokter ?? 'Belum ditentukan',
+                    'tanggal_antrian' => $latestQueue->tanggal_antrian,
+                    'posisi_antrian' => $position,
+                    'total_antrian' => $daftarTunggu->count(),
+                    'nomor_sekarang' => $sedangDipanggil ? substr($sedangDipanggil->nomor_antrian, -3) : null,
+                    'estimasi_waktu_menit' => $estimatedMinutes,
+                ]]);
+            }
+        }
+
+        Log::info('✅ Returning queues', ['count' => $myQueues->count()]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $myQueues,
         ]);
     }
 

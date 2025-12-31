@@ -208,15 +208,13 @@ class ReservationController extends Controller
             Log::error("Gagal koneksi ke ML: " . $e->getMessage());
         }
 
+        // NONAKTIFKAN validasi ketat - biarkan user bebas memilih poli
+        // Log saja jika tidak sesuai rekomendasi AI
         if (!$isMatch && !empty($rekomendasiAI)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda hanya dapat memilih poli yang direkomendasikan oleh sistem (Top 3).',
-                'data' => [
-                    'pilihan_anda' => $poliUser->poli_name ?? '-',
-                    'seharusnya' => $rekomendasiAI
-                ]
-            ], 422); // 422 Unprocessable Entity
+            Log::info("User memilih poli berbeda dari rekomendasi AI", [
+                'pilihan_user' => $poliUser->poli_name ?? '-',
+                'rekomendasi_ai' => $rekomendasiAI
+            ]);
         }
         
         $input['rekomendasi_ai'] = $rekomendasiAI;
@@ -357,6 +355,18 @@ class ReservationController extends Controller
     {
         $this->authorize('verify', $reservation);
         
+        // Validasi status yang dikirim
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:confirmed,cancelled',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status tidak valid',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
         if ($reservation->status !== 'pending') {
             return response()->json([
@@ -364,6 +374,37 @@ class ReservationController extends Controller
                 'message' => 'Reservasi sudah diverifikasi atau dibatalkan',
             ], 409);
         }
+
+        $newStatus = $request->status;
+
+        // Jika reject/cancel, langsung update status tanpa generate antrian
+        if ($newStatus === 'cancelled') {
+            try {
+                $reservation->status = 'cancelled';
+                $reservation->verif_adminID = Auth::id();
+                $reservation->save();
+
+                // Kirim notifikasi ke user
+                $user = $reservation->user;
+                if ($user) {
+                    $user->notify(new ReservationStatusUpdated($reservation));
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Reservasi berhasil dibatalkan',
+                    'data'    => $reservation,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Gagal membatalkan reservasi: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membatalkan reservasi: ' . $e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // Jika confirm, validasi data dan generate antrian
         $dataToValidate = [
             'poli_id'           => $reservation->poli_id,
             'dokter_id'         => $reservation->dokter_id,

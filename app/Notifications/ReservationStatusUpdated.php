@@ -29,11 +29,22 @@ class ReservationStatusUpdated extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        // Format status message
+        $statusText = match($this->reservation->status) {
+            'confirmed' => 'dikonfirmasi',
+            'cancelled' => 'dibatalkan',
+            'pending' => 'sedang diproses',
+            default => $this->reservation->status
+        };
+
         return [
             'reservation_id' => $this->reservation->reservid,
-            'title' => 'Status Reservasi Diperbarui',
-            'message' => 'Reservasi Poli ' . $this->reservation->poli->poli_name . ' Anda telah ' . $this->reservation->status,
+            'category' => 'Reservasi',
+            'title' => 'Reservasi ' . ucfirst($statusText),
+            'message' => 'Reservasi Anda pada ' . $this->reservation->poli->poli_name . ' sudah ' . $statusText . ' oleh admin',
             'status' => $this->reservation->status, // confirmed/cancelled
+            'poli_name' => $this->reservation->poli->poli_name,
+            'tanggal_reservasi' => $this->reservation->tanggal_reservasi,
             'time' => now()
         ];
     }

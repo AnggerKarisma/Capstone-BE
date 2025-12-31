@@ -11,14 +11,23 @@ class AuthController extends Controller
     //Login admin superadmin
     public function login(Request $request)
     {
-        $request->validate([
-            'Email' => 'required|email',
-            'Password' => 'required'
+        // Accept both capitalized and lowercase field names for compatibility
+        $email = $request->input('email') ?? $request->input('Email');
+        $password = $request->input('password') ?? $request->input('Password');
+
+        $request->merge([
+            'email' => $email,
+            'password' => $password,
         ]);
 
-        $admin = Admin::where('Email', $request->Email)->first();
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
 
-        if (! $admin || ! Hash::check($request->Password, $admin->Password)) {
+        $admin = Admin::where('Email', $email)->first();
+
+        if (! $admin || ! Hash::check($password, $admin->Password)) {
             return response()->json(['message' => 'Email atau Password salah'], 401);
         }
 

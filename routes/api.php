@@ -25,6 +25,34 @@ Route::post('/login-user', [UserAuthController::class, 'login']);
 Route::post('/otp/verify', [UserAuthController::class, 'verifyOtp']);
 Route::post('/otp/resend', [UserAuthController::class, 'resendOtp']);
 
+// DEBUG: Test antrian tanpa auth
+Route::get('/debug/my-queues-noauth', function() {
+    $userId = 1; // Hardcoded untuk test
+    $tanggal = '2025-12-30';
+    
+    $antrians = DB::table('antrians')
+        ->join('reservations', 'antrians.reservation_id', '=', 'reservations.reservid')
+        ->join('polis', 'antrians.poli_id', '=', 'polis.poli_id')
+        ->join('dokters', 'antrians.dokter_id', '=', 'dokters.dokter_id')
+        ->where('reservations.booked_user_id', $userId)
+        ->where('antrians.tanggal_antrian', $tanggal)
+        ->whereIn('antrians.status', ['menunggu', 'dipanggil'])
+        ->select(
+            'antrians.*',
+            'polis.poli_name',
+            'dokters.nama_dokter'
+        )
+        ->get();
+    
+    return response()->json([
+        'success' => true,
+        'user_id' => $userId,
+        'tanggal' => $tanggal,
+        'count' => $antrians->count(),
+        'data' => $antrians
+    ]);
+});
+
 
 // Auth Admin
 Route::post('/login', [AuthController::class, 'login']); // Harusnya /admin/login tapi biarkan saja
@@ -51,6 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Antrian (Pasien)
     Route::get('/antrian/dashboard', [AntrianController::class, 'getAntrianDashboard']);
+    Route::get('/my-queues', [AntrianController::class, 'getMyQueues']);
+    Route::get('/my-queues-v2', function(Request $request) {
+        \Illuminate\Support\Facades\Log::info('=== V2 ENDPOINT CALLED ===');
+        return app(App\Http\Controllers\AntrianController::class)->getMyQueues($request);
+    });
 
     //Recomendations
     Route::post('/reservations/check-poli', [ReservationController::class, 'getRecommendation']);
